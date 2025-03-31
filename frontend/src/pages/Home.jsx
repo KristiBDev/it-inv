@@ -1,21 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { AiOutlineEye } from 'react-icons/ai';
-import { AiOutlineEdit } from 'react-icons/ai';
-import { MdOutlineAddBox } from 'react-icons/md';
+import { AiOutlineEye, AiOutlineEdit, AiOutlineDownload } from 'react-icons/ai';
 import { MdOutlineDelete } from 'react-icons/md';
-import { AiOutlineDownload } from 'react-icons/ai'; // Add this import for the download icon
-import { AiOutlineSortAscending, AiOutlineSortDescending } from 'react-icons/ai'; // Import sort icons
 
 const Home = () => {
   const [items, setItems] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]); // Add state for filtered items
-  const [searchTerm, setSearchTerm] = useState(""); // Add state for search term
-  const [selectedDepartment, setSelectedDepartment] = useState("All Departments"); // Add state for department filter
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("All Departments");
   const [loading, setLoading] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: null }); // Add state for sorting
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+  const [refresh, setRefresh] = useState(false);
 
   const toggleNightMode = () => {
     setIsNightMode(!isNightMode);
@@ -24,18 +21,19 @@ const Home = () => {
 
   useEffect(() => {
     setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5555"; // Use local by default, fallback to production
     axios
-      .get(`${import.meta.env.VITE_API_URL}/items`)
+      .get(`${apiUrl}/items`)
       .then((response) => {
-        setItems(response.data.data);
-        setFilteredItems(response.data.data); // Initialize filtered items
+        setItems(response.data.data || []);
+        setFilteredItems(response.data.data || []);
         setLoading(false);
       })
       .catch((error) => {
-        console.log(error);
+        console.error("Error fetching items:", error);
         setLoading(false);
       });
-  }, []);
+  }, [refresh]);
 
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
@@ -50,14 +48,13 @@ const Home = () => {
   };
 
   const filterItems = (term, department) => {
-    setFilteredItems(
-      items.filter(
-        (item) =>
-          (item.title.toLowerCase().includes(term) ||
-            item.customId.toLowerCase().includes(term)) &&
-          (department === "All Departments" || item.department === department)
-      )
+    const filtered = items.filter(
+      (item) =>
+        (item?.title?.toLowerCase().includes(term) ||
+          item?.customId?.toLowerCase().includes(term)) &&
+        (department === "All Departments" || item?.department === department)
     );
+    setFilteredItems(filtered);
   };
 
   const sortItems = (key) => {
@@ -124,15 +121,15 @@ const Home = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-lg rounded-lg p-6">
           <h2 className="text-xl font-semibold">Total Items</h2>
-          <p className="text-4xl font-bold mt-2">{items?.length || 0}</p> {/* Add null check */}
+          <p className="text-4xl font-bold mt-2">{items?.length || 0}</p>
         </div>
         <div className="bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg rounded-lg p-6">
           <h2 className="text-xl font-semibold">In Use</h2>
-          <p className="text-4xl font-bold mt-2">{items?.filter((item) => item.status === 'In Use').length || 0}</p> {/* Add null check */}
+          <p className="text-4xl font-bold mt-2">{items?.filter((item) => item.status === 'In Use').length || 0}</p>
         </div>
         <div className="bg-gradient-to-r from-yellow-500 to-yellow-700 text-white shadow-lg rounded-lg p-6">
           <h2 className="text-xl font-semibold">Maintenance</h2>
-          <p className="text-4xl font-bold mt-2">{items?.filter((item) => item.status === 'Maintenance').length || 0}</p> {/* Add null check */}
+          <p className="text-4xl font-bold mt-2">{items?.filter((item) => item.status === 'Maintenance').length || 0}</p>
         </div>
       </div>
 
@@ -166,6 +163,7 @@ const Home = () => {
         <Link
           to="/items/create"
           className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition"
+          onClick={() => setRefresh(!refresh)}
         >
           Add Item
         </Link>
@@ -185,55 +183,63 @@ const Home = () => {
             </tr>
           </thead>
           <tbody>
-            {(filteredItems || []).map((item, index) => (
-              <tr
-                key={index}
-                className={`hover:bg-gray-100 transition ${
-                  index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
-                }`}
-              >
-                <td className="p-4">{item?.title || 'N/A'}</td>
-                <td className="p-4 hidden md:table-cell">{item?.category || 'N/A'}</td>
-                <td className="p-4 hidden md:table-cell">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      item?.status === 'In Use'
-                        ? 'bg-green-200 text-green-800'
-                        : item?.status === 'Available'
-                        ? 'bg-blue-200 text-blue-800'
-                        : 'bg-yellow-200 text-yellow-800'
-                    }`}
-                  >
-                    {item?.status || 'N/A'}
-                  </span>
-                </td>
-                <td className="p-4 hidden md:table-cell">
-                  {item?.dateAdded ? new Date(item.dateAdded).toLocaleDateString() : 'N/A'}
-                </td>
-                <td className="p-4 hidden md:table-cell">{item?.department || 'N/A'}</td>
-                <td className="p-4 hidden md:table-cell">{item?.customId || 'N/A'}</td>
-                <td className="p-4 flex gap-2">
-                  <Link
-                    to={`/items/details/${item?.customId}`}
-                    className="text-blue-500 hover:text-blue-700 transition"
-                  >
-                    <AiOutlineEye />
-                  </Link>
-                  <Link
-                    to={`/items/edit/${item?.customId}`}
-                    className="text-green-500 hover:text-green-700 transition"
-                  >
-                    <AiOutlineEdit />
-                  </Link>
-                  <Link
-                    to={`/items/delete/${item?.customId}`}
-                    className="text-red-500 hover:text-red-700 transition"
-                  >
-                    <MdOutlineDelete />
-                  </Link>
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item, index) => (
+                <tr
+                  key={index}
+                  className={`hover:bg-gray-100 transition ${
+                    index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                  }`}
+                >
+                  <td className="p-4">{item?.title || 'N/A'}</td>
+                  <td className="p-4 hidden md:table-cell">{item?.category || 'N/A'}</td>
+                  <td className="p-4 hidden md:table-cell">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        item?.status === 'In Use'
+                          ? 'bg-green-200 text-green-800'
+                          : item?.status === 'Available'
+                          ? 'bg-blue-200 text-blue-800'
+                          : 'bg-yellow-200 text-yellow-800'
+                      }`}
+                    >
+                      {item?.status || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="p-4 hidden md:table-cell">
+                    {item?.dateAdded ? new Date(item.dateAdded).toLocaleDateString() : 'N/A'}
+                  </td>
+                  <td className="p-4 hidden md:table-cell">{item?.department || 'N/A'}</td>
+                  <td className="p-4 hidden md:table-cell">{item?.customId || 'N/A'}</td>
+                  <td className="p-4 flex gap-2">
+                    <Link
+                      to={`/items/details/${item?.customId}`}
+                      className="text-blue-500 hover:text-blue-700 transition"
+                    >
+                      <AiOutlineEye />
+                    </Link>
+                    <Link
+                      to={`/items/edit/${item?.customId}`}
+                      className="text-green-500 hover:text-green-700 transition"
+                    >
+                      <AiOutlineEdit />
+                    </Link>
+                    <Link
+                      to={`/items/delete/${item?.customId}`}
+                      className="text-red-500 hover:text-red-700 transition"
+                    >
+                      <MdOutlineDelete />
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="text-center p-4">
+                  No items available.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
