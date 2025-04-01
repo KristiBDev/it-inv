@@ -22,7 +22,7 @@ const Home = () => {
 
   useEffect(() => {
     setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5555";
+    const apiUrl = import.meta.env.VITE_API_URL;
     axios
       .get(`${apiUrl}/items`)
       .then((response) => {
