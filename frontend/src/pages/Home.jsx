@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { AiOutlineEye, AiOutlineEdit, AiOutlineDownload } from 'react-icons/ai';
 import { MdOutlineDelete } from 'react-icons/md';
+import { toast } from 'react-toastify';
 
 const Home = () => {
   const [items, setItems] = useState([]);
@@ -30,7 +31,11 @@ const Home = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Error fetching items:", error);
+        if (error.response?.status === 429) {
+          toast.error('Too many requests. Please try again later.');
+        } else {
+          console.error("Error fetching items:", error);
+        }
         setLoading(false);
       });
   }, [refresh]);

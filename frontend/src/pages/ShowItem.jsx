@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import Spinner from '../components/Spinner';
+import { toast } from 'react-toastify';
 
 const ShowItem = () => {
     const [item, setItem] = useState({});
@@ -19,7 +20,11 @@ const ShowItem = () => {
                 setLoading(false);
             })
             .catch((error) => {
-                console.log(error);
+                if (error.response?.status === 429) {
+                    toast.error('Too many requests. Please try again later.');
+                } else {
+                    console.error(error);
+                }
                 setLoading(false);
             });
     }, [id]);
