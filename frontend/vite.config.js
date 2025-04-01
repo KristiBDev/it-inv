@@ -9,3 +9,6 @@ export default defineConfig({
     'process.env': {}, // Ensure environment variables are referenced if needed
   },
 })
+
+// Suggestion: Implement request throttling or debouncing in the frontend to limit API calls.
+// For example, use a library like lodash.debounce or axios interceptors.

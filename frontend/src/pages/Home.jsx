@@ -21,7 +21,7 @@ const Home = () => {
 
   useEffect(() => {
     setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5555"; // Use local by default, fallback to production
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5555";
     axios
       .get(`${apiUrl}/items`)
       .then((response) => {

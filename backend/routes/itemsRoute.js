@@ -1,10 +1,25 @@
 import express from "express";
 import { Item } from "../models/itemModel.js";
+import { apiLimiter, getLimiter } from "../rateLimiter.js";
 
 const router = express.Router();
 
-// Route for saving a new item
-router.post('/', async (request, response) => {
+// Apply rate limiting for GET requests
+router.get("/", getLimiter, async (request, response) => {
+    try {
+        const items = await Item.find();
+        return response.status(200).json({
+            count: items.length,
+            data: items,
+        });
+    } catch (error) {
+        console.log(error.message);
+        return response.status(500).send({ message: error.message });
+    }
+});
+
+// Apply rate limiting for POST requests
+router.post("/", apiLimiter, async (request, response) => {
     try {
         if (
             !request.body.title ||
@@ -19,32 +34,18 @@ router.post('/', async (request, response) => {
             category: request.body.category,
             status: request.body.status,
             department: request.body.department,
-            dateAdded: request.body.dateAdded || Date.now(), // Use provided date or default to now
+            dateAdded: request.body.dateAdded || Date.now(),
         };
         const item = await Item.create(newItem);
         return response.status(201).send(item);
     } catch (error) {
-        console.error("Error creating item:", error); // Log the full error object
+        console.error("Error creating item:", error);
         return response.status(500).send({ message: "Internal Server Error", error: error.message });
     }
 });
 
-// Route for getting all items
-router.get("/", async (request, response) => {
-    try {
-        const items = await Item.find();
-        return response.status(200).json({
-            count: items.length,
-            data: items,
-        });
-    } catch (error) {
-        console.log(error.message);
-        return response.status(500).send({ message: error.message });
-    }
-});
-
-// Route to get one item
-router.get("/:customId", async (request, response) => {
+// Apply rate limiting for GET requests to a single item
+router.get("/:customId", getLimiter, async (request, response) => {
     try {
         const { customId } = request.params;
         const item = await Item.findOne({ customId });
@@ -58,8 +59,8 @@ router.get("/:customId", async (request, response) => {
     }
 });
 
-// Route to update an item
-router.put("/:customId", async (request, response) => {
+// Apply rate limiting for PUT requests
+router.put("/:customId", apiLimiter, async (request, response) => {
     try {
         if (
             !request.body.title ||
@@ -83,8 +84,8 @@ router.put("/:customId", async (request, response) => {
     }
 });
 
-// Route for deleting an item
-router.delete("/:customId", async (request, response) => {
+// Apply rate limiting for DELETE requests
+router.delete("/:customId", apiLimiter, async (request, response) => {
     try {
         const { customId } = request.params;
         const result = await Item.findOneAndDelete({ customId });

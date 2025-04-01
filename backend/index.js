@@ -12,19 +12,24 @@ app.use(express.json());
 // Middleware for handling CORS policy
 app.use(cors());
 
+// Use itemsRoute for all /items routes
+app.use("/items", itemsRoute);
+
 app.get("/", (request, response) => {
     console.log(request);
     return response.status(234).send("Hello, World!");
 });
 
-app.use("/items", itemsRoute);
+app.get('/api/resource', (req, res) => {
+    res.send('Resource data');
+});
 
 mongoose
     .connect(mongoDBURL)
     .then(() => {
         console.log("Connected to MongoDB");
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
+        app.listen(5555, () => {
+            console.log(`Server is running on port: 5555`);
         });
     })
     .catch((error) => {

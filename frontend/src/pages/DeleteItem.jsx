@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import BackButton from '../components/BackButton';
+import { toast } from 'react-toastify';
 
 const DeleteItem = () => {
   const [loading, setLoading] = useState(false);
@@ -9,13 +10,24 @@ const DeleteItem = () => {
   const { id } = useParams();
 
   const handleDelete = async () => {
+    if (!id) {
+      setMessage('Invalid item ID.');
+      return;
+    }
     setLoading(true);
     setMessage('');
     try {
-      await axios.delete(`http://104.248.166.172:5555/items/${id}`);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
+      await axios.delete(`${apiUrl}/items/${id}`);
       setMessage('Item deleted successfully!');
+      toast.success('Item deleted successfully!');
     } catch (error) {
-      setMessage('Failed to delete item. Please try again.');
+      if (error.response?.status === 429) {
+        toast.error('Too many requests. Please try again later.');
+      } else {
+        console.error('Error deleting item:', error);
+        setMessage('Failed to delete item. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

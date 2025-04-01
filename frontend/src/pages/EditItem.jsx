@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import Spinner from '../components/Spinner';
+import { toast } from 'react-toastify';
 
 const EditItem = () => {
   const [formData, setFormData] = useState({
@@ -17,8 +18,9 @@ const EditItem = () => {
 
   useEffect(() => {
     setLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
     axios
-      .get(`http://104.248.166.172:5555/items/${id}`)
+      .get(`${apiUrl}/items/${id}`)
       .then((response) => {
         setFormData({
           title: response.data.title,
@@ -43,11 +45,17 @@ const EditItem = () => {
     setLoading(true);
     setMessage('');
     try {
-      await axios.put(`http://104.248.166.172:5555/items/${id}`, formData);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
+      await axios.put(`${apiUrl}/items/${id}`, formData);
       setMessage('Item updated successfully!');
+      toast.success('Item updated successfully!');
     } catch (error) {
-      console.error(error);
-      setMessage('Failed to update item. Please try again.');
+      if (error.response?.status === 429) {
+        toast.error('Too many requests. Please try again later.');
+      } else {
+        console.error(error);
+        setMessage('Failed to update item. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

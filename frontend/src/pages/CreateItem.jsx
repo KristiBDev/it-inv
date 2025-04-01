@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import BackButton from '../components/BackButton';
+import { toast } from 'react-toastify';
 
 const CreateItem = () => {
   const [formData, setFormData] = useState({
@@ -21,12 +22,18 @@ const CreateItem = () => {
     setLoading(true);
     setMessage('');
     try {
-      const response = await axios.post('http://104.248.166.172:5555/items', formData);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
+      const response = await axios.post(`${apiUrl}/items`, formData);
       setMessage('Item created successfully!');
+      toast.success('Item created successfully!');
       setFormData({ title: '', category: '', status: '', department: '' });
     } catch (error) {
-      console.error("Error creating item:", error.response?.data?.message || error.message); // Log the error
-      setMessage('Failed to create item. Please try again.');
+      if (error.response?.status === 429) {
+        toast.error('Too many requests. Please try again later.');
+      } else {
+        console.error("Error creating item:", error.response?.data?.message || error.message);
+        setMessage('Failed to create item. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

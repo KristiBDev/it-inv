@@ -11,8 +11,9 @@ const ShowItem = () => {
 
     useEffect(() => {
         setLoading(true);
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
         axios
-            .get(`http://104.248.166.172:5555/items/${id}`)
+            .get(`${apiUrl}/items/${id}`)
             .then((response) => {
                 setItem(response.data);
                 setLoading(false);
