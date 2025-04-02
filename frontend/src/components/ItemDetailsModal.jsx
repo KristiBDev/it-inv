@@ -33,7 +33,7 @@ const ItemDetailsModal = ({ isOpen, onClose, itemId, isNightMode }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-30 z-50 flex justify-center items-center p-4">
+    <div className="fixed inset-0 backdrop-blur-[2px] bg-transparent z-50 flex justify-center items-center p-4">
       <div 
         className={`relative rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto ${
           isNightMode ? 'bg-gray-800 text-white' : 'bg-white text-black'

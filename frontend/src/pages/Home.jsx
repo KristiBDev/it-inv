@@ -321,7 +321,7 @@ const Home = () => {
                   <p className={`font-medium mt-1 ${isNightMode ? 'text-gray-200' : 'text-gray-800'}`}>
                     <span className="font-bold">{log.user}</span> {log.action === 'create' ? 'created' : log.action === 'update' ? 'updated' : 'deleted'} item{' '}
                     <Link 
-                      to={`/items/details/${log.itemId}`}
+                      to={`/items/edit/${log.itemId}`}
                       className="text-blue-500 hover:underline font-bold"
                     >
                       {log.itemName}
