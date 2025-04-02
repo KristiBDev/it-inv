@@ -1,6 +1,7 @@
 import express from "express";
 import { Item } from "../models/itemModel.js";
 import { apiLimiter, getLimiter } from "../rateLimiter.js";
+import { createItemLog, updateItemLog, deleteItemLog } from "../utils/logUtils.js";
 
 const router = express.Router();
 
@@ -37,6 +38,10 @@ router.post("/", apiLimiter, async (request, response) => {
             dateAdded: request.body.dateAdded || Date.now(),
         };
         const item = await Item.create(newItem);
+        
+        // Create log for item creation
+        await createItemLog(item, request.body.user || "DemoAdmin");
+        
         return response.status(201).send(item);
     } catch (error) {
         console.error("Error creating item:", error);
@@ -71,11 +76,17 @@ router.put("/:customId", apiLimiter, async (request, response) => {
             return response.status(400).send({ message: "All fields are required" });
         }
         const { customId } = request.params;
-        const result = await Item.findOneAndUpdate({ customId }, request.body, { new: true });
-
-        if (!result) {
+        
+        // Get the item before update for logging changes
+        const oldItem = await Item.findOne({ customId });
+        if (!oldItem) {
             return response.status(404).json({ message: "Item not found" });
         }
+        
+        const result = await Item.findOneAndUpdate({ customId }, request.body, { new: true });
+
+        // Create log for item update
+        await updateItemLog(result, oldItem, request.body.user || "DemoAdmin");
 
         return response.status(200).send({ message: "Item updated successfully" });
     } catch (error) {
@@ -88,10 +99,17 @@ router.put("/:customId", apiLimiter, async (request, response) => {
 router.delete("/:customId", apiLimiter, async (request, response) => {
     try {
         const { customId } = request.params;
-        const result = await Item.findOneAndDelete({ customId });
-        if (!result) {
+        const item = await Item.findOne({ customId });
+        
+        if (!item) {
             return response.status(404).json({ message: "Item not found" });
         }
+        
+        await Item.findOneAndDelete({ customId });
+        
+        // Create log for item deletion
+        await deleteItemLog(item, request.body.user || "DemoAdmin");
+        
         return response.status(200).json({ message: "Item deleted successfully" });
     } catch (error) {
         console.log(error.message);

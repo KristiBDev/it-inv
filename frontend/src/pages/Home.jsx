@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { AiOutlineEye, AiOutlineEdit, AiOutlineDownload } from 'react-icons/ai';
 import { MdOutlineDelete } from 'react-icons/md';
 import { toast } from 'react-toastify';
+import ItemDetailsModal from '../components/ItemDetailsModal';
 
 const Home = () => {
   const [items, setItems] = useState([]);
@@ -14,10 +15,24 @@ const Home = () => {
   const [isNightMode, setIsNightMode] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [refresh, setRefresh] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState(null);
 
   const toggleNightMode = () => {
     setIsNightMode(!isNightMode);
     document.body.classList.toggle('dark-mode', !isNightMode);
+  };
+
+  const openItemDetails = (itemId) => {
+    setSelectedItemId(itemId);
+    setIsModalOpen(true);
+  };
+
+  const closeItemDetails = () => {
+    setIsModalOpen(false);
+    setSelectedItemId(null);
   };
 
   useEffect(() => {
@@ -37,6 +52,25 @@ const Home = () => {
           console.error("Error fetching items:", error);
         }
         setLoading(false);
+      });
+  }, [refresh]);
+
+  useEffect(() => {
+    setLogsLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL;
+    axios
+      .get(`${apiUrl}/logs?limit=10&page=1`)
+      .then((response) => {
+        setLogs(response.data.data || []);
+        setLogsLoading(false);
+      })
+      .catch((error) => {
+        if (error.response?.status === 429) {
+          toast.error('Too many requests. Please try again later.');
+        } else {
+          console.error("Error fetching logs:", error);
+        } 
+        setLogsLoading(false);
       });
   }, [refresh]);
 
@@ -217,12 +251,12 @@ const Home = () => {
                   <td className="p-4 hidden md:table-cell">{item?.department || 'N/A'}</td>
                   <td className="p-4 hidden md:table-cell">{item?.customId || 'N/A'}</td>
                   <td className="p-4 flex gap-2">
-                    <Link
-                      to={`/items/details/${item?.customId}`}
+                    <button
+                      onClick={() => openItemDetails(item?.customId)}
                       className="text-blue-500 hover:text-blue-700 transition"
                     >
                       <AiOutlineEye />
-                    </Link>
+                    </button>
                     <Link
                       to={`/items/edit/${item?.customId}`}
                       className="text-green-500 hover:text-green-700 transition"
@@ -248,6 +282,72 @@ const Home = () => {
           </tbody>
         </table>
       </div>
+
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
+        <div className={`rounded-lg overflow-hidden ${isNightMode ? 'bg-gray-800' : 'bg-white'} shadow-lg p-2`}>
+          {logsLoading ? (
+            <div className="p-4 text-center">Loading activity logs...</div>
+          ) : logs.length > 0 ? (
+            <div className="space-y-2">
+              {logs.map((log) => (
+                <div 
+                  key={log._id} 
+                  className={`p-3 rounded-lg border-l-4 ${
+                    log.action === 'create'
+                      ? 'border-l-green-500 bg-green-50'
+                      : log.action === 'update'
+                      ? 'border-l-yellow-500 bg-yellow-50'
+                      : 'border-l-red-500 bg-red-50'
+                  } ${isNightMode ? 'bg-opacity-10 text-gray-200' : ''}`}
+                >
+                  <div className="flex justify-between items-start flex-wrap gap-2">
+                    <span className="text-sm text-gray-500">
+                      {new Date(log.timestamp).toLocaleDateString()} {new Date(log.timestamp).toLocaleTimeString()}
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        log.action === 'create'
+                          ? 'bg-green-200 text-green-800'
+                          : log.action === 'update'
+                          ? 'bg-yellow-200 text-yellow-800'
+                          : 'bg-red-200 text-red-800'
+                      } ${isNightMode ? 'bg-opacity-30' : ''}`}
+                    >
+                      {log.action.charAt(0).toUpperCase() + log.action.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <p className={`font-medium mt-1 ${isNightMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                    <span className="font-bold">{log.user}</span> {log.action === 'create' ? 'created' : log.action === 'update' ? 'updated' : 'deleted'} item{' '}
+                    <Link 
+                      to={`/items/details/${log.itemId}`}
+                      className="text-blue-500 hover:underline font-bold"
+                    >
+                      {log.itemName}
+                    </Link> ({log.itemId})
+                  </p>
+                  
+                  <p className={`mt-1 ${isNightMode ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
+                    {log.details && typeof log.details === 'string' 
+                      ? log.details.replace(`User ${log.user} ${log.action}d item ${log.itemName} (${log.itemId})`, '').trim() || 'No additional details'
+                      : 'No details available'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 text-center">No activity logs available.</div>
+          )}
+        </div>
+      </div>
+
+      <ItemDetailsModal 
+        isOpen={isModalOpen} 
+        onClose={closeItemDetails} 
+        itemId={selectedItemId}
+        isNightMode={isNightMode}
+      />
     </div>
   );
 };

@@ -2,8 +2,14 @@ import express from "express";
 import { PORT, mongoDBURL } from "./config.js";
 import mongoose from "mongoose";
 import itemsRoute from "./routes/itemsRoute.js";
+import logsRoute from "./routes/logsRoute.js";
 import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
+
+// Define __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -19,9 +25,12 @@ app.use(express.static(path.join(__dirname, "public")));
 // Use itemsRoute for all /items routes
 app.use("/items", itemsRoute);
 
+// Use logsRoute for all /logs routes
+app.use("/logs", logsRoute);
+
 // Root route
 app.get("/", (request, response) => {
-    console.log(request);
+    console.log("Root route accessed");
     return response.status(200).send("Hello, World!");
 });
 
