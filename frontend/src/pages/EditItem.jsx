@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import Spinner from '../components/Spinner';
+import ItemNotes from '../components/ItemNotes';
+import ItemHistory from '../components/ItemHistory';
 import { toast } from 'react-toastify';
 
 const EditItem = () => {
@@ -16,8 +18,7 @@ const EditItem = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
-  const [itemLogs, setItemLogs] = useState([]);
-  const [logsLoading, setLogsLoading] = useState(false);
+  const [refresh, setRefresh] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -36,9 +37,6 @@ const EditItem = () => {
           department: itemData.department,
         });
         setLoading(false);
-        
-        // After fetching the item, fetch its logs
-        fetchItemLogs(itemData.customId);
       })
       .catch((error) => {
         console.error(error);
@@ -47,21 +45,6 @@ const EditItem = () => {
       });
   }, [id]);
   
-  const fetchItemLogs = (itemId) => {
-    setLogsLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
-    axios
-      .get(`${apiUrl}/logs/item/${itemId}`)
-      .then((response) => {
-        setItemLogs(response.data.data || []);
-        setLogsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching item logs:", error);
-        setLogsLoading(false);
-      });
-  };
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -75,11 +58,16 @@ const EditItem = () => {
       await axios.put(`${apiUrl}/items/${id}`, formData);
       setMessage('Item updated successfully!');
       toast.success('Item updated successfully!');
+      // Refresh history after update
+      setRefresh(!refresh);
       // Wait a moment before navigating back
       setTimeout(() => navigate('/'), 1500);
     } catch (error) {
       if (error.response?.status === 429) {
-        toast.error('Too many requests. Please try again later.');
+        // Use the server's response message if available
+        const errorMessage = error.response.data.message || "Item update limit reached. Please try again later.";
+        toast.error(errorMessage);
+        setMessage('Rate limit exceeded. Please try again later.');
       } else {
         console.error(error);
         setMessage('Failed to update item. Please try again.');
@@ -87,6 +75,11 @@ const EditItem = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Handler to refresh history when notes change
+  const handleNotesChange = () => {
+    setRefresh(!refresh);
   };
 
   return (
@@ -155,6 +148,7 @@ const EditItem = () => {
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Form fields remain the same */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                   <input
@@ -250,68 +244,18 @@ const EditItem = () => {
         )}
       </div>
       
-      {/* Item Logs Section */}
+      {/* Modularized components */}
       {!loading && item && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">Item History</h2>
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-            {logsLoading ? (
-              <div className="p-6 text-center">
-                <Spinner />
-              </div>
-            ) : itemLogs.length > 0 ? (
-              <div className="p-4 space-y-3">
-                {itemLogs.map((log) => (
-                  <div 
-                    key={log._id} 
-                    className={`p-3 rounded-lg border-l-4 ${
-                      log.action === 'create'
-                        ? 'border-l-green-500 bg-green-50'
-                        : log.action === 'update'
-                        ? 'border-l-yellow-500 bg-yellow-50'
-                        : 'border-l-red-500 bg-red-50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start flex-wrap gap-2">
-                      <span className="text-sm text-gray-500">
-                        {new Date(log.timestamp).toLocaleDateString()} {new Date(log.timestamp).toLocaleTimeString()}
-                      </span>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          log.action === 'create'
-                            ? 'bg-green-200 text-green-800'
-                            : log.action === 'update'
-                            ? 'bg-yellow-200 text-yellow-800'
-                            : 'bg-red-200 text-red-800'
-                        }`}
-                      >
-                        {log.action.charAt(0).toUpperCase() + log.action.slice(1)}
-                      </span>
-                    </div>
-                    
-                    <p className="font-medium mt-1 text-gray-800">
-                      <span className="font-bold">{log.user}</span> {log.action === 'create' ? 'created' : log.action === 'update' ? 'updated' : 'deleted'} this item
-                    </p>
-                    
-                    {log.changes && Object.keys(log.changes).length > 0 && (
-                      <div className="mt-2 pl-2 border-l-2 border-gray-300">
-                        {Object.entries(log.changes).map(([field, change]) => (
-                          <p key={field} className="text-sm text-gray-600">
-                            <span className="font-medium capitalize">{field}:</span> {change.from} → {change.to}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-gray-500">
-                No history available for this item.
-              </div>
-            )}
-          </div>
-        </div>
+        <>
+          <ItemNotes 
+            itemId={item.customId} 
+            onNotesChange={handleNotesChange} 
+          />
+          <ItemHistory 
+            itemId={item.customId} 
+            key={`history-${refresh}`} 
+          />
+        </>
       )}
     </div>
   );

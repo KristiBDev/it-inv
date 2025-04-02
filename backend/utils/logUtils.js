@@ -57,3 +57,39 @@ export const deleteItemLog = async (item, user = "DemoAdmin") => {
         console.error("Error creating delete log:", error);
     }
 };
+
+// Create log entry for note creation
+export const createNoteLog = async (item, note, user = "DemoAdmin") => {
+    try {
+        await Log.create({
+            itemId: item.customId,
+            itemName: item.title,
+            action: 'update',
+            user,
+            details: `User ${user} added a note to item ${item.title} (${item.customId}): "${note.content}"`,
+            changes: {
+                note: { added: note.content }
+            },
+        });
+    } catch (error) {
+        console.error("Error creating note log:", error);
+    }
+};
+
+// Create log entry for note deletion
+export const deleteNoteLog = async (item, note, user = "DemoAdmin") => {
+    try {
+        await Log.create({
+            itemId: item.customId,
+            itemName: item.title,
+            action: 'update',
+            user,
+            details: `User ${user} deleted a note from item ${item.title} (${item.customId})`,
+            changes: {
+                note: { removed: note.content }
+            },
+        });
+    } catch (error) {
+        console.error("Error creating note deletion log:", error);
+    }
+};

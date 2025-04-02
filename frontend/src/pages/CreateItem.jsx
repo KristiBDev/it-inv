@@ -23,15 +23,19 @@ const CreateItem = () => {
     setMessage('');
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
-      const response = await axios.post(`${apiUrl}/items`, formData);
+      await axios.post(`${apiUrl}/items`, formData);
       setMessage('Item created successfully!');
       toast.success('Item created successfully!');
-      setFormData({ title: '', category: '', status: '', department: '' });
+      // Wait a moment before navigating back
+      setTimeout(() => navigate('/'), 1500);
     } catch (error) {
       if (error.response?.status === 429) {
-        toast.error('Too many requests. Please try again later.');
+        // Use the server's response message if available
+        const errorMessage = error.response.data.message || "Item creation limit reached. Please try again later.";
+        toast.error(errorMessage);
+        setMessage('Too many requests. Please try again later.');
       } else {
-        console.error("Error creating item:", error.response?.data?.message || error.message);
+        console.error(error);
         setMessage('Failed to create item. Please try again.');
       }
     } finally {

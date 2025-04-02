@@ -1,11 +1,11 @@
 import express from "express";
 import { Log } from "../models/logModel.js";
-import { getLimiter } from "../rateLimiter.js";
+import { apiLimiter, getLimiter, highTrafficLimiter } from "../rateLimiter.js";
 
 const router = express.Router();
 
-// Get all logs with pagination
-router.get("/", getLimiter, async (request, response) => {
+// Get all logs with pagination - Apply high traffic rate limiting
+router.get("/", highTrafficLimiter, async (request, response) => {
     try {
         const page = parseInt(request.query.page) || 1;
         const limit = parseInt(request.query.limit) || 50;
@@ -31,7 +31,7 @@ router.get("/", getLimiter, async (request, response) => {
     }
 });
 
-// Get logs for a specific item
+// Get logs for a specific item - Apply standard read rate limiting
 router.get("/item/:itemId", getLimiter, async (request, response) => {
     try {
         const { itemId } = request.params;
@@ -47,7 +47,7 @@ router.get("/item/:itemId", getLimiter, async (request, response) => {
     }
 });
 
-// Get log by ID
+// Get log by ID - Apply standard read rate limiting
 router.get("/:id", getLimiter, async (request, response) => {
     try {
         const { id } = request.params;
@@ -60,6 +60,21 @@ router.get("/:id", getLimiter, async (request, response) => {
         return response.status(200).json(log);
     } catch (error) {
         console.log(error.message);
+        return response.status(500).send({ message: error.message });
+    }
+});
+
+// Utility route to delete all logs without environment checks
+router.delete("/util/deleteAll", async (request, response) => {
+    try {
+        const result = await Log.deleteMany({});
+        
+        return response.status(200).json({
+            message: "All logs deleted successfully",
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        console.error("Error deleting logs:", error.message);
         return response.status(500).send({ message: error.message });
     }
 });
