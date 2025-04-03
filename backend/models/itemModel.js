@@ -29,6 +29,9 @@ const itemSchema = mongoose.Schema(
             required: true,
             enum: ['HR', 'Finance', 'IT', 'Marketing', 'Operations'],
         },
+        qrCode: {
+            type: String, // Store QR code as base64 string
+        },
     },
     {
         timestamps: true,

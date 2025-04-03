@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+/*import mongoose from "mongoose";
 import { Log } from "../models/logModel.js";
 import { Note } from "../models/noteModel.js";
 
@@ -60,3 +60,4 @@ mongoose
     console.log("Error connecting to MongoDB:", error);
     process.exit(1);
   });
+*/

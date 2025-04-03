@@ -5,7 +5,9 @@ import BackButton from '../components/BackButton';
 import Spinner from '../components/Spinner';
 import ItemNotes from '../components/ItemNotes';
 import ItemHistory from '../components/ItemHistory';
+import ItemTag from '../components/ItemTag';
 import { toast } from 'react-toastify';
+import { FaDownload, FaPrint } from 'react-icons/fa';
 
 const EditItem = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +21,7 @@ const EditItem = () => {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [refresh, setRefresh] = useState(false);
+  const [qrCode, setQrCode] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -36,6 +39,21 @@ const EditItem = () => {
           status: itemData.status,
           department: itemData.department,
         });
+        
+        // Get the QR code
+        if (itemData.qrCode) {
+          setQrCode(itemData.qrCode);
+        } else {
+          // If QR code doesn't exist in the item data, fetch it separately
+          axios.get(`${apiUrl}/items/${id}/qrcode`)
+            .then(qrResponse => {
+              setQrCode(qrResponse.data.qrCode);
+            })
+            .catch(error => {
+              console.error("Error fetching QR code:", error);
+            });
+        }
+        
         setLoading(false);
       })
       .catch((error) => {
@@ -80,6 +98,68 @@ const EditItem = () => {
   // Handler to refresh history when notes change
   const handleNotesChange = () => {
     setRefresh(!refresh);
+  };
+  
+  // Function to download the QR code as an image
+  const downloadQRCode = () => {
+    if (qrCode) {
+      const link = document.createElement('a');
+      link.href = qrCode;
+      link.download = `qrcode-${item.customId}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+  
+  // Function to print the QR code
+  const printQRCode = () => {
+    if (qrCode) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>QR Code for ${item.title} (${item.customId})</title>
+            <style>
+              body {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                font-family: Arial, sans-serif;
+              }
+              .container {
+                text-align: center;
+              }
+              img {
+                max-width: 300px;
+                margin-bottom: 20px;
+              }
+              h2, p {
+                margin: 5px 0;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <img src="${qrCode}" alt="QR Code">
+              <h2>${item.title}</h2>
+              <p>ID: ${item.customId}</p>
+              <p>Department: ${item.department}</p>
+              <p>Category: ${item.category}</p>
+              <p>Status: ${item.status}</p>
+            </div>
+            <script>
+              window.onload = function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+    }
   };
 
   return (
@@ -137,6 +217,14 @@ const EditItem = () => {
                       {item.status}
                     </span>
                   </div>
+                  
+                  {/* Asset Label Section - updated title */}
+                  {qrCode && (
+                    <div className="mt-8 pt-6 border-t border-blue-200">
+                      <span className="block text-sm font-medium text-blue-600 mb-2">Asset Label</span>
+                      <ItemTag item={item} qrCode={qrCode} compact={true} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { IoMdClose } from 'react-icons/io';
 import Spinner from './Spinner';
+import ItemTag from './ItemTag';
 import { toast } from 'react-toastify';
 
 const ItemDetailsModal = ({ isOpen, onClose, itemId, isNightMode }) => {
   const [item, setItem] = useState({});
   const [loading, setLoading] = useState(false);
+  const [qrCode, setQrCode] = useState(null);
 
   useEffect(() => {
     if (isOpen && itemId) {
@@ -16,6 +18,21 @@ const ItemDetailsModal = ({ isOpen, onClose, itemId, isNightMode }) => {
         .get(`${apiUrl}/items/${itemId}`)
         .then((response) => {
           setItem(response.data);
+          
+          // Get the QR code
+          if (response.data.qrCode) {
+            setQrCode(response.data.qrCode);
+          } else {
+            // If QR code doesn't exist in the item data, fetch it separately
+            axios.get(`${apiUrl}/items/${itemId}/qrcode`)
+              .then(qrResponse => {
+                setQrCode(qrResponse.data.qrCode);
+              })
+              .catch(error => {
+                console.error("Error fetching QR code:", error);
+              });
+          }
+          
           setLoading(false);
         })
         .catch((error) => {
@@ -107,6 +124,14 @@ const ItemDetailsModal = ({ isOpen, onClose, itemId, isNightMode }) => {
                   {item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'N/A'}
                 </p>
               </div>
+              
+              {/* Asset Label Section - updated title */}
+              {qrCode && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <span className="text-lg font-medium text-gray-500 mb-2 block">Asset Label</span>
+                  <ItemTag item={item} qrCode={qrCode} compact={false} />
+                </div>
+              )}
             </div>
           )}
         </div>
