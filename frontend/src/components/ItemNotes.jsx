@@ -108,9 +108,9 @@ const ItemNotes = ({ itemId, onNotesChange }) => {
 
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Item Notes</h2>
+      <h2 className="text-2xl font-bold mb-4">Item Notes</h2>
       
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div className="card rounded-lg overflow-hidden">
         <div className="p-6">
           <form onSubmit={handleNoteSubmit} className="mb-6">
             <div className="flex flex-col space-y-2">
@@ -141,7 +141,7 @@ const ItemNotes = ({ itemId, onNotesChange }) => {
           </form>
           
           <div className="border-t border-gray-200 pt-4">
-            <h3 className="text-lg font-medium text-gray-800 mb-3">Existing Notes</h3>
+            <h3 className="text-lg font-medium mb-3">Existing Notes</h3>
             
             {notesLoading ? (
               <div className="flex justify-center py-4">
@@ -150,7 +150,7 @@ const ItemNotes = ({ itemId, onNotesChange }) => {
             ) : itemNotes.length > 0 ? (
               <ul className="space-y-3">
                 {itemNotes.map(note => (
-                  <li key={note._id} className="flex items-start justify-between bg-gray-50 p-3 rounded-lg">
+                  <li key={note._id} className="flex items-start justify-between p-3 rounded-lg" style={{ backgroundColor: 'var(--highlight-bg)' }}>
                     <div>
                       <p className="text-gray-800">{note.content}</p>
                       <div className="flex items-center text-xs text-gray-500 mt-1">
@@ -170,7 +170,7 @@ const ItemNotes = ({ itemId, onNotesChange }) => {
                 ))}
               </ul>
             ) : (
-              <p className="text-center text-gray-500 py-4">No notes for this item yet.</p>
+              <p className="text-center py-4 text-secondary">No notes for this item yet.</p>
             )}
           </div>
         </div>

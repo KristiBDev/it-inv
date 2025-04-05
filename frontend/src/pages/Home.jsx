@@ -5,6 +5,8 @@ import { AiOutlineEye, AiOutlineEdit, AiOutlineDownload } from 'react-icons/ai';
 import { MdOutlineDelete } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import ItemDetailsModal from '../components/ItemDetailsModal';
+import ThemeToggle from '../components/ThemeToggle';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Home = () => {
   const [items, setItems] = useState([]);
@@ -12,18 +14,13 @@ const Home = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("All Departments");
   const [loading, setLoading] = useState(false);
-  const [isNightMode, setIsNightMode] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [refresh, setRefresh] = useState(false);
   const [logs, setLogs] = useState([]);
   const [logsLoading, setLogsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
-
-  const toggleNightMode = () => {
-    setIsNightMode(!isNightMode);
-    document.body.classList.toggle('dark-mode', !isNightMode);
-  };
+  const { isNightMode } = useTheme();
 
   const openItemDetails = (itemId) => {
     setSelectedItemId(itemId);
@@ -143,18 +140,10 @@ const Home = () => {
   };
 
   return (
-    <div className={`p-6 min-h-screen ${isNightMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
+    <div className={`p-6 min-h-screen`}>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-4xl font-bold tracking-wide">IT Inventory Dashboard</h1>
-        <div className="flex items-center">
-          <label className="mr-2 text-lg font-medium">Dark Mode</label>
-          <input
-            type="checkbox"
-            checked={isNightMode}
-            onChange={toggleNightMode}
-            className="toggle-checkbox"
-          />
-        </div>
+        <ThemeToggle />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -208,9 +197,9 @@ const Home = () => {
         </Link>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full bg-white shadow-lg rounded-lg overflow-hidden">
-          <thead className="bg-blue-500 text-white">
+      <div className={`rounded-lg shadow overflow-hidden ${isNightMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <table className={`min-w-full divide-y ${isNightMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
+          <thead className={`${isNightMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
             <tr>
               <th className="p-4 text-left">Name</th>
               <th className="p-4 text-left hidden md:table-cell">Category</th>
@@ -221,14 +210,16 @@ const Home = () => {
               <th className="p-4 text-left">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className={`${isNightMode ? 'bg-gray-800 text-gray-300' : 'bg-white'} divide-y ${isNightMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
             {filteredItems.length > 0 ? (
               filteredItems.map((item, index) => (
                 <tr
                   key={index}
-                  className={`hover:bg-gray-100 transition ${
-                    index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
-                  }`}
+                  className={`transition ${
+                    isNightMode 
+                      ? (index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750') 
+                      : (index % 2 === 0 ? 'bg-gray-50' : 'bg-white')
+                  } ${isNightMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}
                 >
                   <td className="p-4">{item?.title || 'N/A'}</td>
                   <td className="p-4 hidden md:table-cell">{item?.category || 'N/A'}</td>
@@ -273,7 +264,7 @@ const Home = () => {
                 </tr>
               ))
             ) : (
-              <tr>
+              <tr className={isNightMode ? 'bg-gray-800 text-gray-300' : ''}>
                 <td colSpan="7" className="text-center p-4">
                   No items available.
                 </td>
@@ -295,24 +286,35 @@ const Home = () => {
                   key={log._id} 
                   className={`p-3 rounded-lg border-l-4 ${
                     log.action === 'create'
-                      ? 'border-l-green-500 bg-green-50'
+                      ? 'border-l-emerald-500'
                       : log.action === 'update'
-                      ? 'border-l-yellow-500 bg-yellow-50'
-                      : 'border-l-red-500 bg-red-50'
-                  } ${isNightMode ? 'bg-opacity-10 text-gray-200' : ''}`}
+                      ? 'border-l-blue-500'
+                      : 'border-l-purple-500'
+                  } ${isNightMode 
+                      ? (log.action === 'create'
+                          ? 'bg-emerald-900 bg-opacity-15'
+                          : log.action === 'update'
+                          ? 'bg-blue-900 bg-opacity-15'
+                          : 'bg-purple-900 bg-opacity-15') 
+                      : (log.action === 'create'
+                          ? 'bg-emerald-50'
+                          : log.action === 'update'
+                          ? 'bg-blue-50'
+                          : 'bg-purple-50')
+                  } ${isNightMode ? 'text-gray-200' : ''}`}
                 >
                   <div className="flex justify-between items-start flex-wrap gap-2">
-                    <span className="text-sm text-gray-500">
+                    <span className={`text-sm ${isNightMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       {new Date(log.timestamp).toLocaleDateString()} {new Date(log.timestamp).toLocaleTimeString()}
                     </span>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
                         log.action === 'create'
-                          ? 'bg-green-200 text-green-800'
+                          ? isNightMode ? 'bg-emerald-800 bg-opacity-50 text-emerald-200' : 'bg-emerald-200 text-emerald-800'
                           : log.action === 'update'
-                          ? 'bg-yellow-200 text-yellow-800'
-                          : 'bg-red-200 text-red-800'
-                      } ${isNightMode ? 'bg-opacity-30' : ''}`}
+                          ? isNightMode ? 'bg-blue-800 bg-opacity-50 text-blue-200' : 'bg-blue-200 text-blue-800'
+                          : isNightMode ? 'bg-purple-800 bg-opacity-50 text-purple-200' : 'bg-purple-200 text-purple-800'
+                      }`}
                     >
                       {log.action.charAt(0).toUpperCase() + log.action.slice(1)}
                     </span>

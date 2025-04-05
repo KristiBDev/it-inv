@@ -4,11 +4,13 @@ import { IoMdClose } from 'react-icons/io';
 import Spinner from './Spinner';
 import ItemTag from './ItemTag';
 import { toast } from 'react-toastify';
+import { useTheme } from '../contexts/ThemeContext';
 
-const ItemDetailsModal = ({ isOpen, onClose, itemId, isNightMode }) => {
+const ItemDetailsModal = ({ isOpen, onClose, itemId }) => {
   const [item, setItem] = useState({});
   const [loading, setLoading] = useState(false);
   const [qrCode, setQrCode] = useState(null);
+  const { isNightMode } = useTheme();
 
   useEffect(() => {
     if (isOpen && itemId) {
@@ -51,16 +53,12 @@ const ItemDetailsModal = ({ isOpen, onClose, itemId, isNightMode }) => {
 
   return (
     <div className="fixed inset-0 backdrop-blur-[2px] bg-transparent z-50 flex justify-center items-center p-4">
-      <div 
-        className={`relative rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto ${
-          isNightMode ? 'bg-gray-800 text-white' : 'bg-white text-black'
-        }`}
-      >
+      <div className="relative rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto card">
         <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-gray-200">
           <h2 className="text-2xl font-bold">Item Details</h2>
           <button
             onClick={onClose}
-            className={`p-1 rounded-full ${isNightMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'} transition`}
+            className={`p-1 rounded-full hover:bg-opacity-10 hover:bg-gray-500 transition`}
             aria-label="Close"
           >
             <IoMdClose className="text-2xl" />

@@ -1,10 +1,59 @@
 @import "tailwindcss";
 
+:root {
+  --background-color: #f9fafb;
+  --card-background: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --border-color: #e5e7eb;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --highlight-bg: #f3f4f6;
+  --blue-highlight: #dbeafe;
+  --green-highlight: #d1fae5;
+  --yellow-highlight: #fef3c7;
+  --accent-color: #3b82f6;
+}
+
+[data-theme="dark"] {
+  --background-color: #1f2937;
+  --card-background: #111827;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --border-color: #374151;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --highlight-bg: #374151;
+  --blue-highlight: #1e3a8a;
+  --green-highlight: #065f46;
+  --yellow-highlight: #92400e;
+  --accent-color: #60a5fa;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
 body.dark-mode {
   background-color: #121212;
   color: #ffffff;
 }
 
+/* Generic card styling */
+.card {
+  background-color: var(--card-background);
+  border-color: var(--border-color);
+  box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+/* Form controls */
+input, select, textarea {
+  background-color: var(--card-background);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* Toggle button styling */
 .toggle-checkbox {
   width: 40px;
   height: 20px;
@@ -35,6 +84,37 @@ body.dark-mode {
   top: 1px;
   left: 1px;
   transition: transform 0.3s;
+}
+
+/* Status colors for cards */
+[data-theme="light"] .status-in-use {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+[data-theme="light"] .status-available {
+  background-color: #dbeafe; 
+  color: #1e40af;
+}
+
+[data-theme="light"] .status-maintenance {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+[data-theme="dark"] .status-in-use {
+  background-color: #065f46;
+  color: #d1fae5;
+}
+
+[data-theme="dark"] .status-available {
+  background-color: #1e3a8a;
+  color: #dbeafe;
+}
+
+[data-theme="dark"] .status-maintenance {
+  background-color: #92400e;
+  color: #fef3c7;
 }
 
 /* Mobile optimization */
