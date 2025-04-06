@@ -125,10 +125,27 @@ const Home = () => {
                   </p>
                   
                   <p className="mt-1 text-secondary text-sm">
-                    {log.details && typeof log.details === 'string' 
-                      ? log.details.replace(`User ${log.user} ${log.action}d item ${log.itemName} (${log.itemId})`, '').trim() || 'No additional details'
-                      : 'No details available'}
+                    {log.action === 'delete' ? (
+                      <>
+                        <strong>Deleted item details:</strong> {log.changes && Object.keys(log.changes).length > 0 ? (
+                          <span className="block mt-1 ml-2">
+                            {Object.entries(log.changes).map(([field, value]) => (
+                              <span key={field} className="block">
+                                <strong className="capitalize">{field}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value}
+                              </span>
+                            ))}
+                          </span>
+                        ) : (
+                          'No item details available'
+                        )}
+                      </>
+                    ) : (
+                      log.details && typeof log.details === 'string'
+                        ? log.details.replace(`User ${log.user} ${log.action}d item ${log.itemName} (${log.itemId})`, '').trim() || 'No additional details'
+                        : 'No details available'
+                    )}
                   </p>
+                  
                 </div>
               ))}
             </div>
