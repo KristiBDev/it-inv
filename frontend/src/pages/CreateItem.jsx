@@ -87,7 +87,7 @@ const CreateItem = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Auto-generated fields - Fixed background color */}
-              <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6  p-4 rounded-lg">
                 <div>
                   <label className="block text-sm font-medium mb-1">Item ID (Auto-generated)</label>
                   <input
