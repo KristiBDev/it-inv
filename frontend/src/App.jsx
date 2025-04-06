@@ -1,29 +1,35 @@
-import React from 'react'
-import { Routes, Route } from 'react-router-dom'
-import CreateItem from './pages/CreateItem'
-import DeleteItem from './pages/DeleteItem'
-import EditItem from './pages/EditItem'
-import Home from './pages/Home'
-import { useTheme } from './contexts/ThemeContext'
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { ThemeProvider } from './contexts/ThemeContext';
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import CreateItem from './pages/CreateItem';
+import EditItem from './pages/EditItem';
+import DeleteItem from './pages/DeleteItem';
+import InventoryList from './pages/InventoryList';
+// Other imports as needed
 
-const App = () => {
-  const { isNightMode } = useTheme();
-  
-  // Add data-theme attribute to the root element based on night mode
-  React.useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isNightMode ? 'dark' : 'light');
-  }, [isNightMode]);
-  
+function App() {
   return (
-    <div className="app-container">
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='/items/create' element={<CreateItem />} />
-        <Route path='/items/edit/:id' element={<EditItem />} />
-        <Route path='/items/delete/:id' element={<DeleteItem />} />
-      </Routes>
-    </div>
-  )
+    <ThemeProvider>
+      <>
+        <ToastContainer position="bottom-right" />
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="/items/create" element={<CreateItem />} />
+            <Route path="/items/edit/:id" element={<EditItem />} />
+            <Route path="/items/delete/:id" element={<DeleteItem />} />
+            <Route path="/inventory" element={<InventoryList />} />
+            <Route path="/reminders" element={<div className="p-6">Reminders Page (Coming Soon)</div>} />
+            <Route path="/logs" element={<div className="p-6">Logs / Activity Page (Coming Soon)</div>} />
+          </Route>
+        </Routes>
+      </>
+    </ThemeProvider>
+  );
 }
 
-export default App
+export default App;

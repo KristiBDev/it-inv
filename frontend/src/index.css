@@ -633,3 +633,79 @@ h1, h2, h3, h4, h5, h6 {
   padding-top: 1.125rem; /* Slightly more padding for bigger headers */
   padding-bottom: 1.1 25rem;
 }
+
+/* Add these styles to your existing CSS file */
+.sidebar {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  background-color: var(--bg-color, white);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode support */
+body.dark .sidebar {
+  background-color: var(--bg-color-dark, #1a1a1a);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Sidebar Specific Styles */
+.sidebar {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  background-color: var(--card-background);
+  border-right: 1px solid var(--border-color);
+  transition: width 0.3s ease;
+}
+
+[data-theme="dark"] .sidebar {
+  background-color: var(--card-background);
+  border-right: 1px solid var(--border-color);
+}
+
+.sidebar a.active {
+  position: relative;
+}
+
+.sidebar a.active:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--primary-color);
+}
+
+/* Content area spacing with sidebar */
+@media (min-width: 768px) {
+  .ml-64 {
+    margin-left: 16rem;
+  }
+}
+
+/* Transition for the sidebar and content */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Handle responsive layout */
+@media (max-width: 768px) {
+  .ml-64, .ml-16 {
+    margin-left: 0;
+  }
+  
+  .sidebar {
+    width: 0;
+    overflow: hidden;
+  }
+  
+  .sidebar.w-64 {
+    width: 16rem;
+  }
+  
+  .sidebar.w-16 {
+    width: 4rem;
+  }
+}
