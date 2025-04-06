@@ -26,6 +26,7 @@ const ItemHistory = ({ itemId }) => {
       })
       .catch((error) => {
         console.error("Error fetching item logs:", error);
+        toast.error("Failed to load item history");
         setLogsLoading(false);
       });
   };
@@ -73,7 +74,10 @@ const ItemHistory = ({ itemId }) => {
               </div>
               
               <p className={`font-medium mt-1 ${isNightMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                <span className="font-bold">{log.user}</span> {log.action === 'create' ? 'created' : log.action === 'update' ? 'updated' : 'deleted'} this item
+                <span className="font-bold">{log.user}</span> {log.action === 'create' ? 'created' : log.action === 'update' ? 'updated' : 'deleted'} 
+                {log.action === 'delete' && log.itemName ? 
+                  <span className="font-normal"> item {log.itemName} {log.itemCode ? `(${log.itemCode})` : ''}</span> : 
+                  ' this item'}
               </p>
               
               {log.changes && Object.keys(log.changes).length > 0 && (

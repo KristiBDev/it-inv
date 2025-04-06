@@ -112,12 +112,16 @@ const Home = () => {
                   
                   <p className="font-medium mt-1">
                     <span className="font-bold">{log.user}</span> {log.action === 'create' ? 'created' : log.action === 'update' ? 'updated' : 'deleted'} item{' '}
-                    <Link 
-                      to={`/items/edit/${log.itemId}`}
-                      className="text-blue-500 hover:underline font-bold"
-                    >
-                      {log.itemName}
-                    </Link> ({log.itemId})
+                    {log.action !== 'delete' ? (
+                      <Link 
+                        to={`/items/edit/${log.itemId}`}
+                        className="text-blue-500 hover:underline font-bold"
+                      >
+                        {log.itemName}
+                      </Link>
+                    ) : (
+                      <span className="font-bold">{log.itemName}</span>
+                    )} ({log.itemId})
                   </p>
                   
                   <p className="mt-1 text-secondary text-sm">
