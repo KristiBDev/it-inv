@@ -10,6 +10,10 @@ const itemSchema = mongoose.Schema(
             type: String,
             required: true,
         },
+        description: {
+            type: String,
+            default: '',
+        },
         dateAdded: {
             type: Date,
             default: Date.now,
@@ -17,18 +21,40 @@ const itemSchema = mongoose.Schema(
         category: {
             type: String,
             required: true,
-            enum: ['Hardware', 'Software', 'Network'],
         },
         status: {
             type: String,
             required: true,
-            enum: ['In Use', 'Available', 'Maintenance'],
+            enum: ['Available', 'In Use', 'Maintenance'],
         },
         department: {
             type: String,
             required: true,
-            enum: ['HR', 'Finance', 'IT', 'Marketing', 'Operations'],
         },
+        location: {
+            type: String,
+            default: '',
+        },
+        purchaseDate: {
+            type: Date,
+        },
+        purchasePrice: {
+            type: Number,
+            min: 0,
+        },
+        manufacturer: {
+            type: String,
+            default: '',
+        },
+        model: {
+            type: String,
+            default: '',
+        },
+        serialNumber: {
+            type: String,
+            default: '',
+        },
+        // Removed notes field as it's being handled separately
         qrCode: {
             type: String, // Store QR code as base64 string
         },
@@ -42,21 +68,15 @@ const itemSchema = mongoose.Schema(
 itemSchema.pre("save", async function (next) {
     try {
         if (!this.customId) {
-            const lastItem = await mongoose
-                .model("Item")
-                .findOne()
-                .sort({ customId: -1 });
-
-            // Handle the case where no items exist in the database
-            const lastCustomId = lastItem && lastItem.customId
-                ? parseInt(lastItem.customId.replace("ORG", ""))
-                : 999;
-
-            this.customId = `ORG${lastCustomId + 1}`;
+            // Generate a more sophisticated ID format
+            const prefix = 'INV';
+            const timestamp = Date.now().toString().slice(-6);
+            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            this.customId = `${prefix}-${timestamp}-${random}`;
         }
         next();
     } catch (error) {
-        console.error("Error generating custom ID:", error); // Log any errors in the custom ID generation
+        console.error("Error generating custom ID:", error);
         next(error);
     }
 });

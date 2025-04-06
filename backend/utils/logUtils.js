@@ -20,22 +20,74 @@ export const updateItemLog = async (item, oldItem, user = "DemoAdmin") => {
     try {
         // Track what fields were changed
         const changes = {};
-        if (oldItem.title !== item.title) changes.title = { from: oldItem.title, to: item.title };
-        if (oldItem.category !== item.category) changes.category = { from: oldItem.category, to: item.category };
-        if (oldItem.status !== item.status) changes.status = { from: oldItem.status, to: item.status };
-        if (oldItem.department !== item.department) changes.department = { from: oldItem.department, to: item.department };
         
-        // Create change description
-        const changeDescriptions = Object.keys(changes).map(field => 
-            `${field} changed from "${changes[field].from}" to "${changes[field].to}"`
-        );
+        // Check basic fields
+        if (oldItem.title !== item.title) changes.title = { from: oldItem.title || 'N/A', to: item.title || 'N/A' };
+        if (oldItem.category !== item.category) changes.category = { from: oldItem.category || 'N/A', to: item.category || 'N/A' };
+        if (oldItem.status !== item.status) changes.status = { from: oldItem.status || 'N/A', to: item.status || 'N/A' };
+        if (oldItem.department !== item.department) changes.department = { from: oldItem.department || 'N/A', to: item.department || 'N/A' };
+        
+        // Check additional fields
+        if (oldItem.description !== item.description) 
+            changes.description = { 
+                from: oldItem.description || 'Not set', 
+                to: item.description || 'Not set' 
+            };
+        if (oldItem.location !== item.location) 
+            changes.location = { 
+                from: oldItem.location || 'Not set', 
+                to: item.location || 'Not set' 
+            };
+        if (String(oldItem.purchaseDate) !== String(item.purchaseDate)) 
+            changes.purchaseDate = { 
+                from: oldItem.purchaseDate ? new Date(oldItem.purchaseDate).toLocaleDateString() : 'Not set', 
+                to: item.purchaseDate ? new Date(item.purchaseDate).toLocaleDateString() : 'Not set' 
+            };
+        if (oldItem.purchasePrice !== item.purchasePrice) 
+            changes.purchasePrice = { 
+                from: oldItem.purchasePrice !== undefined ? oldItem.purchasePrice : 'Not set', 
+                to: item.purchasePrice !== undefined ? item.purchasePrice : 'Not set' 
+            };
+        if (oldItem.manufacturer !== item.manufacturer) 
+            changes.manufacturer = { 
+                from: oldItem.manufacturer || 'Not set', 
+                to: item.manufacturer || 'Not set' 
+            };
+        if (oldItem.model !== item.model) 
+            changes.model = { 
+                from: oldItem.model || 'Not set', 
+                to: item.model || 'Not set' 
+            };
+        if (oldItem.serialNumber !== item.serialNumber) 
+            changes.serialNumber = { 
+                from: oldItem.serialNumber || 'Not set', 
+                to: item.serialNumber || 'Not set' 
+            };
+        if (oldItem.notes !== item.notes) 
+            changes.notes = { 
+                from: oldItem.notes || 'Not set', 
+                to: item.notes || 'Not set' 
+            };
+        
+        // Create change description for the most important fields
+        const primaryChanges = Object.entries(changes)
+            .filter(([field]) => ['title', 'category', 'status', 'department'].includes(field))
+            .map(([field, change]) => `${field} changed from "${change.from}" to "${change.to}"`);
+        
+        const changeCount = Object.keys(changes).length;
+        const otherChangesCount = changeCount - primaryChanges.length;
+        let changeDescription = primaryChanges.join(", ");
+        
+        if (otherChangesCount > 0) {
+            changeDescription += ` and ${otherChangesCount} other field${otherChangesCount > 1 ? 's' : ''}`;
+        }
         
         await Log.create({
             itemId: item.customId,
             itemName: item.title,
             action: 'update',
             user,
-            details: `User ${user} updated item ${item.title} (${item.customId}): ${changeDescriptions.join(", ")}`,
+            details: `User ${user} updated item ${item.title} (${item.customId}): ${changeDescription || 'Minor updates'}`,
             changes,
         });
     } catch (error) {

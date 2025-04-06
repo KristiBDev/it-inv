@@ -13,9 +13,16 @@ import { useTheme } from '../contexts/ThemeContext';
 const EditItem = () => {
   const [formData, setFormData] = useState({
     title: '',
+    description: '',
     category: '',
     status: '',
     department: '',
+    location: '',
+    purchaseDate: '',
+    purchasePrice: '',
+    manufacturer: '',
+    model: '',
+    serialNumber: '',
   });
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -36,10 +43,17 @@ const EditItem = () => {
         const itemData = response.data;
         setItem(itemData);
         setFormData({
-          title: itemData.title,
-          category: itemData.category,
-          status: itemData.status,
-          department: itemData.department,
+          title: itemData.title || '',
+          description: itemData.description || '',
+          category: itemData.category || '',
+          status: itemData.status || '',
+          department: itemData.department || '',
+          location: itemData.location || '',
+          purchaseDate: itemData.purchaseDate ? new Date(itemData.purchaseDate).toISOString().split('T')[0] : '',
+          purchasePrice: itemData.purchasePrice || '',
+          manufacturer: itemData.manufacturer || '',
+          model: itemData.model || '',
+          serialNumber: itemData.serialNumber || '',
         });
         
         // Get the QR code
@@ -240,80 +254,180 @@ const EditItem = () => {
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Form fields */}
-                <div>
-                  <label className="block text-sm font-medium text-secondary mb-1">Name</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    className="app-input shadow-sm"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-secondary mb-1">Category</label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="app-select shadow-sm"
-                    required
-                  >
-                    <option value="">Select Category</option>
-                    <option value="Hardware">Hardware</option>
-                    <option value="Software">Software</option>
-                    <option value="Network">Network</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-secondary mb-1">Department</label>
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={handleChange}
-                    className="app-select shadow-sm"
-                    required
-                  >
-                    <option value="">Select Department</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                    <option value="IT">IT</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Operations">Operations</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-secondary mb-1">Status</label>
-                  <div className="flex flex-wrap gap-4 mt-2">
-                    {['In Use', 'Available', 'Maintenance'].map(status => (
-                      <label 
-                        key={status}
-                        className={`flex items-center px-4 py-2 rounded-lg border cursor-pointer transition-all ${
-                          formData.status === status
-                            ? isNightMode 
-                              ? 'border-blue-400 bg-blue-900 bg-opacity-50 text-blue-200'
-                              : 'border-primary bg-primary bg-opacity-10 text-primary'
-                            : isNightMode
-                              ? 'border-gray-600 hover:bg-gray-700 text-gray-200'
-                              : 'border-gray-300 hover:bg-gray-50'
-                        }`}
+                {/* Basic Information Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3">Basic Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-secondary mb-1">Name</label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleChange}
+                        className="app-input shadow-sm"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-secondary mb-1">Category</label>
+                      <select
+                        name="category"
+                        value={formData.category}
+                        onChange={handleChange}
+                        className="app-select shadow-sm"
+                        required
                       >
-                        <input
-                          type="radio"
-                          name="status"
-                          value={status}
-                          checked={formData.status === status}
-                          onChange={handleChange}
-                          className="sr-only"
-                        />
-                        <span>{status}</span>
-                      </label>
-                    ))}
+                        <option value="">Select Category</option>
+                        <option value="Laptop">Laptop</option>
+                        <option value="Desktop">Desktop</option>
+                        <option value="Monitor">Monitor</option>
+                        <option value="Printer">Printer</option>
+                        <option value="Server">Server</option>
+                        <option value="Network Device">Network Device</option>
+                        <option value="Peripheral">Peripheral</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-secondary mb-1">Department</label>
+                      <select
+                        name="department"
+                        value={formData.department}
+                        onChange={handleChange}
+                        className="app-select shadow-sm"
+                        required
+                      >
+                        <option value="">Select Department</option>
+                        <option value="HR">HR</option>
+                        <option value="Finance">Finance</option>
+                        <option value="IT">IT</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Operations">Operations</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-secondary mb-1">Status</label>
+                      <div className="flex flex-wrap gap-4 mt-2">
+                        {['Available', 'In Use', 'Maintenance'].map(status => (
+                          <label 
+                            key={status}
+                            className={`flex items-center px-4 py-2 rounded-lg border cursor-pointer transition-all ${
+                              formData.status === status
+                                ? isNightMode 
+                                  ? 'border-blue-400 bg-blue-900 bg-opacity-50 text-blue-200'
+                                  : 'border-primary bg-primary bg-opacity-10 text-primary'
+                                : isNightMode
+                                  ? 'border-gray-600 hover:bg-gray-700 text-gray-200'
+                                  : 'border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="status"
+                              value={status}
+                              checked={formData.status === status}
+                              onChange={handleChange}
+                              className="sr-only"
+                            />
+                            <span>{status}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-secondary mb-1">Description</label>
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      className="app-textarea h-24 w-full"
+                      placeholder="Enter item description"
+                    ></textarea>
+                  </div>
+                </div>
+                
+                {/* Additional Details Section */}
+                <div className="mb-6 pt-4 border-t">
+                  <h3 className="text-lg font-semibold mb-3">Additional Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-secondary mb-1">Location</label>
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        className="app-input shadow-sm"
+                        placeholder="Where is this item located?"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-secondary mb-1">Purchase Date</label>
+                      <input
+                        type="date"
+                        name="purchaseDate"
+                        value={formData.purchaseDate}
+                        onChange={handleChange}
+                        className="app-input shadow-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-secondary mb-1">Purchase Price</label>
+                      <input
+                        type="number"
+                        name="purchasePrice"
+                        value={formData.purchasePrice}
+                        onChange={handleChange}
+                        className="app-input shadow-sm"
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-secondary mb-1">Manufacturer</label>
+                      <input
+                        type="text"
+                        name="manufacturer"
+                        value={formData.manufacturer}
+                        onChange={handleChange}
+                        className="app-input shadow-sm"
+                        placeholder="E.g., Dell, HP, Apple"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-secondary mb-1">Model</label>
+                      <input
+                        type="text"
+                        name="model"
+                        value={formData.model}
+                        onChange={handleChange}
+                        className="app-input shadow-sm"
+                        placeholder="E.g., XPS 15, MacBook Pro"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-secondary mb-1">Serial Number</label>
+                      <input
+                        type="text"
+                        name="serialNumber"
+                        value={formData.serialNumber}
+                        onChange={handleChange}
+                        className="app-input shadow-sm"
+                        placeholder="Serial/identification number"
+                      />
+                    </div>
                   </div>
                 </div>
                 

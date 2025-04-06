@@ -18,7 +18,6 @@ const CreateItem = () => {
     manufacturer: '',
     model: '',
     serialNumber: '',
-    notes: '',
     customId: '',
     dateAdded: new Date().toISOString().split('T')[0]
   });
@@ -87,8 +86,8 @@ const CreateItem = () => {
         <div className="app-card p-6 shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Auto-generated fields */}
-              <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+              {/* Auto-generated fields - Fixed background color */}
+              <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
                 <div>
                   <label className="block text-sm font-medium mb-1">Item ID (Auto-generated)</label>
                   <input
@@ -271,16 +270,6 @@ const CreateItem = () => {
                 />
               </div>
 
-              <div className="col-span-1 md:col-span-2">
-                <label className="block text-sm font-medium mb-1">Notes</label>
-                <textarea
-                  name="notes"
-                  value={itemData.notes}
-                  onChange={handleChange}
-                  className="app-textarea h-24"
-                  placeholder="Any additional information about this item"
-                ></textarea>
-              </div>
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t mt-6">
