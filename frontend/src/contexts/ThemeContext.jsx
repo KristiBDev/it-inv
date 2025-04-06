@@ -14,11 +14,11 @@ export const ThemeProvider = ({ children }) => {
     // Update localStorage
     localStorage.setItem('isNightMode', JSON.stringify(isNightMode));
     
-    // Update body class for global styling
-    document.body.classList.toggle('dark-mode', isNightMode);
-    
     // Update HTML element for CSS variables
     document.documentElement.setAttribute('data-theme', isNightMode ? 'dark' : 'light');
+    
+    // Keep body class for backwards compatibility
+    document.body.classList.toggle('dark-mode', isNightMode);
   }, [isNightMode]);
 
   const toggleNightMode = () => {

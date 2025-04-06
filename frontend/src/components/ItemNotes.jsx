@@ -3,8 +3,9 @@ import axios from 'axios';
 import { FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import Spinner from './Spinner';
+import { useTheme } from '../contexts/ThemeContext';
 
-const ItemNotes = ({ itemId, onNotesChange }) => {
+const ItemNotes = ({ itemId, onNotesChange, isNightMode }) => {
   const [itemNotes, setItemNotes] = useState([]);
   const [notesLoading, setNotesLoading] = useState(false);
   const [noteContent, setNoteContent] = useState('');
@@ -107,73 +108,80 @@ const ItemNotes = ({ itemId, onNotesChange }) => {
   };
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Item Notes</h2>
-      
-      <div className="card rounded-lg overflow-hidden">
-        <div className="p-6">
-          <form onSubmit={handleNoteSubmit} className="mb-6">
-            <div className="flex flex-col space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Add a note (max 100 characters):
-              </label>
-              <div className="flex items-start">
-                <input
-                  type="text"
-                  value={noteContent}
-                  onChange={(e) => setNoteContent(e.target.value)}
-                  maxLength={100}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-                  placeholder="Enter a note..."
-                />
-                <button
-                  type="submit"
-                  disabled={addingNote || !noteContent.trim()}
-                  className="ml-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50"
-                >
-                  {addingNote ? 'Adding...' : 'Add Note'}
-                </button>
-              </div>
-              <div className="text-xs text-gray-500">
-                {noteContent.length}/100 characters
-              </div>
-            </div>
-          </form>
-          
-          <div className="border-t border-gray-200 pt-4">
-            <h3 className="text-lg font-medium mb-3">Existing Notes</h3>
-            
-            {notesLoading ? (
-              <div className="flex justify-center py-4">
-                <Spinner />
-              </div>
-            ) : itemNotes.length > 0 ? (
-              <ul className="space-y-3">
-                {itemNotes.map(note => (
-                  <li key={note._id} className="flex items-start justify-between p-3 rounded-lg" style={{ backgroundColor: 'var(--highlight-bg)' }}>
-                    <div>
-                      <p className="text-gray-800">{note.content}</p>
-                      <div className="flex items-center text-xs text-gray-500 mt-1">
-                        <span>By {note.user}</span>
-                        <span className="mx-2">•</span>
-                        <span>{new Date(note.createdAt).toLocaleString()}</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteNote(note._id)}
-                      className="text-red-500 hover:text-red-700 transition p-1"
-                      title="Delete note"
-                    >
-                      <FaTrash />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-center py-4 text-secondary">No notes for this item yet.</p>
-            )}
+    <div className="p-6">
+      <form onSubmit={handleNoteSubmit} className="mb-6">
+        <div className="flex flex-col space-y-2">
+          <label className={`block text-sm font-medium ${isNightMode ? 'text-gray-200' : 'text-gray-700'}`}>
+            Add a note (max 100 characters):
+          </label>
+          <div className="flex items-start">
+            <input
+              type="text"
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              maxLength={100}
+              className={`flex-1 border rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm ${
+                isNightMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'border-gray-300'
+              }`}
+              placeholder="Enter a note..."
+            />
+            <button
+              type="submit"
+              disabled={addingNote || !noteContent.trim()}
+              className="ml-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50"
+            >
+              {addingNote ? 'Adding...' : 'Add Note'}
+            </button>
+          </div>
+          <div className={`text-xs ${isNightMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {noteContent.length}/100 characters
           </div>
         </div>
+      </form>
+      
+      <div className={`border-t pt-4 ${isNightMode ? 'border-gray-700' : 'border-gray-200'}`}>
+        <h3 className={`text-lg font-medium mb-3 ${isNightMode ? 'text-gray-200' : 'text-gray-800'}`}>Existing Notes</h3>
+        
+        {notesLoading ? (
+          <div className="flex justify-center py-4">
+            <Spinner />
+          </div>
+        ) : itemNotes.length > 0 ? (
+          <ul className="space-y-3">
+            {itemNotes.map(note => (
+              <li 
+                key={note._id} 
+                className={`flex items-start justify-between p-3 rounded-lg ${
+                  isNightMode 
+                    ? 'bg-gray-700 text-gray-200' 
+                    : 'bg-gray-50 text-gray-800'
+                }`}
+              >
+                <div>
+                  <p className={isNightMode ? 'text-gray-200' : 'text-gray-800'}>{note.content}</p>
+                  <div className="flex items-center text-xs mt-1">
+                    <span className={isNightMode ? 'text-gray-400' : 'text-gray-500'}>By {note.user}</span>
+                    <span className="mx-2">•</span>
+                    <span className={isNightMode ? 'text-gray-400' : 'text-gray-500'}>
+                      {new Date(note.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleDeleteNote(note._id)}
+                  className="text-red-500 hover:text-red-700 transition p-1"
+                  title="Delete note"
+                >
+                  <FaTrash />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={`text-center py-4 ${isNightMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            No notes for this item yet.
+          </p>
+        )}
       </div>
     </div>
   );

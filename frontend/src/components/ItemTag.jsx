@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { FaDownload, FaPrint } from 'react-icons/fa';
 import html2canvas from 'html2canvas';
+import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * A component for displaying and printing an item tag with QR code
@@ -12,6 +13,7 @@ import html2canvas from 'html2canvas';
  */
 const ItemTag = ({ item, qrCode, compact = false }) => {
   const labelRef = useRef(null);
+  const { isNightMode } = useTheme();
   
   if (!item || !qrCode) {
     return null;
@@ -19,6 +21,7 @@ const ItemTag = ({ item, qrCode, compact = false }) => {
   
   // Shared label HTML for both download and print
   const generateLabelHTML = () => {
+    // Use light theme colors for export regardless of current theme
     return `
       <div style="
         display: flex;
@@ -74,7 +77,6 @@ const ItemTag = ({ item, qrCode, compact = false }) => {
           ">${item.customId}</div>
         </div>
       </div>
-      
     `;
   };
 
@@ -180,43 +182,31 @@ const ItemTag = ({ item, qrCode, compact = false }) => {
 
   return (
     <div className="w-full max-w-[280px] mx-auto">
-      {/* Preview of the asset label */}
-      <div 
-        ref={labelRef}
-        className="flex items-start bg-white p-3 rounded-lg shadow-md mb-3 border border-gray-200"
-      >
-        <div className="w-[70px] flex-shrink-0 pr-2">
+      {/* Preview of the asset label using theme classes */}
+      <div className="asset-label">
+        <div className="asset-label-qr">
           <img src={qrCode} alt="Asset Label QR Code" className="w-full border border-gray-100 rounded p-0.5" />
         </div>
-        <div className="ml-2 flex-grow overflow-hidden">
-          <div className="text-xs font-bold text-gray-600">DemoOrg Co.</div>
-          {/* Make sure text doesn't get cut off by allowing text wrapping */}
-          <div className="font-bold text-sm text-gray-800 break-words">{item.title}</div>
-          <div className="text-sm text-gray-600">{item.customId}</div>
+        <div className="asset-label-info">
+          <div className="asset-label-org">DemoOrg Co.</div>
+          <div className="asset-label-title">{item.title}</div>
+          <div className="asset-label-id">{item.customId}</div>
         </div>
       </div>
       
       {/* Action buttons */}
-      <div className={`flex ${compact ? 'gap-2' : 'gap-4'} justify-center`}>
+      <div className={`flex ${compact ? 'gap-2' : 'gap-4'} justify-center mt-3`}>
         <button 
           onClick={downloadLabel}
-          className={`flex items-center gap-1 ${
-            compact 
-              ? 'px-2 py-1 text-xs' 
-              : 'px-3 py-2 gap-2'
-          } bg-blue-500 text-white rounded-md hover:bg-blue-600 transition`}
+          className={`app-btn ${compact ? 'app-btn-sm' : ''} app-btn-primary`}
         >
-          <FaDownload /> {compact ? 'Save' : 'Save Label'}
+          <FaDownload className="mr-1" /> {compact ? 'Save' : 'Save Label'}
         </button>
         <button 
           onClick={printQRCode}
-          className={`flex items-center gap-1 ${
-            compact 
-              ? 'px-2 py-1 text-xs' 
-              : 'px-3 py-2 gap-2'
-          } bg-gray-500 text-white rounded-md hover:bg-gray-600 transition`}
+          className={`app-btn ${compact ? 'app-btn-sm' : ''} app-btn-outline`}
         >
-          <FaPrint /> {compact ? 'Print' : 'Print Label'}
+          <FaPrint className="mr-1" /> {compact ? 'Print' : 'Print Label'}
         </button>
       </div>
     </div>

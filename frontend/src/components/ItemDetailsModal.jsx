@@ -52,9 +52,9 @@ const ItemDetailsModal = ({ isOpen, onClose, itemId }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-[2px] bg-transparent z-50 flex justify-center items-center p-4">
-      <div className="relative rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto card">
-        <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-gray-200">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 app-modal-overlay">
+      <div className={`relative rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto ${isNightMode ? 'bg-gray-800' : 'bg-white'} app-modal`}>
+        <div className={`sticky top-0 z-10 flex justify-between items-center p-4 border-b ${isNightMode ? 'border-gray-700' : 'border-gray-200'} ${isNightMode ? 'bg-gray-800' : 'bg-white'}`}>
           <h2 className="text-2xl font-bold">Item Details</h2>
           <button
             onClick={onClose}
@@ -65,7 +65,7 @@ const ItemDetailsModal = ({ isOpen, onClose, itemId }) => {
           </button>
         </div>
 
-        <div className="p-6">
+        <div className={`p-6 ${isNightMode ? 'bg-gray-800' : 'bg-white'}`}>
           {loading ? (
             <div className="flex justify-center items-center h-40">
               <Spinner />
