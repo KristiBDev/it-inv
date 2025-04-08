@@ -9,6 +9,7 @@ import CreateItem from './pages/CreateItem';
 import EditItem from './pages/EditItem';
 import DeleteItem from './pages/DeleteItem';
 import InventoryList from './pages/InventoryList';
+import Activity from './pages/Activity';
 // Other imports as needed
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/inventory" element={<InventoryList />} />
             <Route path="/reminders" element={<div className="p-6">Reminders Page (Coming Soon)</div>} />
             <Route path="/logs" element={<div className="p-6">Logs / Activity Page (Coming Soon)</div>} />
+            <Route path="/activity" element={<Activity />} />
           </Route>
         </Routes>
       </>

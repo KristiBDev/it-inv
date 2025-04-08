@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { AiOutlineDashboard, AiOutlineUnorderedList, AiOutlinePlus, AiOutlineBell, AiOutlineClockCircle } from 'react-icons/ai';
+import { FaHistory } from 'react-icons/fa'; // Add this import for the activity icon
 import { useTheme } from '../contexts/ThemeContext';
 
 const Sidebar = ({ collapsed, toggleSidebar }) => {
@@ -12,7 +13,7 @@ const Sidebar = ({ collapsed, toggleSidebar }) => {
     { path: '/inventory', label: 'Inventory List', icon: <AiOutlineUnorderedList /> },
     { path: '/items/create', label: 'Add Item', icon: <AiOutlinePlus /> },
     { path: '/reminders', label: 'Reminders', icon: <AiOutlineBell /> },
-    { path: '/logs', label: 'Logs / Activity', icon: <AiOutlineClockCircle /> },
+    { path: '/activity', label: 'Activity Log', icon: <FaHistory /> }
   ];
 
   return (
