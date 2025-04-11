@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import itemsRoute from "./routes/itemsRoute.js";
 import logsRoute from "./routes/logsRoute.js";
 import notesRoute from "./routes/notesRoute.js";
+import remindersRoute from "./routes/remindersRoute.js";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -28,11 +29,13 @@ console.log("Routes being registered:");
 console.log(" - /items");
 console.log(" - /logs"); 
 console.log(" - /notes");
+console.log(" - /reminders");
 
 // Use routes
 app.use("/items", itemsRoute);
 app.use("/logs", logsRoute);
 app.use("/notes", notesRoute);
+app.use("/reminders", remindersRoute);
 
 // Root route
 app.get("/", (request, response) => {

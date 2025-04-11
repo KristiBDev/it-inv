@@ -10,6 +10,7 @@ import EditItem from './pages/EditItem';
 import DeleteItem from './pages/DeleteItem';
 import InventoryList from './pages/InventoryList';
 import Activity from './pages/Activity';
+import RemindersPage from './pages/RemindersPage';
 // Other imports as needed
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
             <Route path="/items/edit/:id" element={<EditItem />} />
             <Route path="/items/delete/:id" element={<DeleteItem />} />
             <Route path="/inventory" element={<InventoryList />} />
-            <Route path="/reminders" element={<div className="p-6">Reminders Page (Coming Soon)</div>} />
+            <Route path="/reminders" element={<RemindersPage />} />
             <Route path="/logs" element={<div className="p-6">Logs / Activity Page (Coming Soon)</div>} />
             <Route path="/activity" element={<Activity />} />
           </Route>
