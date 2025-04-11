@@ -10,6 +10,15 @@ import { useTheme } from '../contexts/ThemeContext';
 const RemindersPage = () => {
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newReminder, setNewReminder] = useState({
+    title: '',
+    description: '',
+    dueDate: '',
+    itemId: ''
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [items, setItems] = useState([]);
   const navigate = useNavigate();
   const { isNightMode } = useTheme();
 
@@ -29,6 +38,16 @@ const RemindersPage = () => {
           console.warn('Reminders API did not return an array:', response.data);
           setReminders([]); // Set to empty array if response format is unexpected
         }
+        
+        // Fetch items for dropdown menu
+        const itemsResponse = await axios.get(`${apiUrl}/items`);
+        if (Array.isArray(itemsResponse.data)) {
+          setItems(itemsResponse.data);
+        } else if (itemsResponse.data && Array.isArray(itemsResponse.data.items)) {
+          setItems(itemsResponse.data.items);
+        } else {
+          setItems([]);
+        }
       } catch (error) {
         console.error('Error fetching reminders:', error);
         toast.error('Failed to load reminders');
@@ -41,10 +60,56 @@ const RemindersPage = () => {
     fetchReminders();
   }, []);
 
-  // Handle reminder creation
+  // Handle reminder creation modal
   const handleCreateReminder = () => {
-    // Navigate to create reminder form or open a modal
-    toast.info('Create reminder functionality will be implemented soon');
+    setIsModalOpen(true);
+  };
+  
+  // Close modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setNewReminder({
+      title: '',
+      description: '',
+      dueDate: '',
+      itemId: ''
+    });
+  };
+  
+  // Handle input change for new reminder
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewReminder(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  // Submit new reminder
+  const handleSubmitReminder = async (e) => {
+    e.preventDefault();
+    
+    if (!newReminder.title || !newReminder.dueDate) {
+      toast.error('Title and due date are required');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
+      const response = await axios.post(`${apiUrl}/reminders`, newReminder);
+      
+      if (response.data) {
+        setReminders(prev => [...prev, response.data]);
+        toast.success('Reminder created successfully');
+        closeModal();
+      }
+    } catch (error) {
+      console.error('Error creating reminder:', error);
+      toast.error('Failed to create reminder');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Handle reminder deletion
@@ -128,6 +193,97 @@ const RemindersPage = () => {
           </div>
         )}
       </div>
+      
+      {/* Create Reminder Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className={`relative w-full max-w-md p-6 rounded-lg shadow-xl ${isNightMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <button 
+              onClick={closeModal}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <h3 className="text-xl font-semibold mb-4">Create New Reminder</h3>
+            
+            <form onSubmit={handleSubmitReminder} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1">Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={newReminder.title}
+                  onChange={handleInputChange}
+                  className="app-input shadow-sm w-full"
+                  placeholder="Reminder title"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={newReminder.description}
+                  onChange={handleInputChange}
+                  className="app-textarea shadow-sm w-full"
+                  placeholder="Describe the reminder"
+                  rows={3}
+                ></textarea>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1">Due Date</label>
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={newReminder.dueDate}
+                  onChange={handleInputChange}
+                  className="app-input shadow-sm w-full"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-1">Related Item (Optional)</label>
+                <select
+                  name="itemId"
+                  value={newReminder.itemId}
+                  onChange={handleInputChange}
+                  className="app-select shadow-sm w-full"
+                >
+                  <option value="">-- Select Item --</option>
+                  {items.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.title} ({item.customId})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="app-btn app-btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="app-btn app-btn-primary"
+                  disabled={submitting}
+                >
+                  {submitting ? 'Creating...' : 'Create Reminder'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
