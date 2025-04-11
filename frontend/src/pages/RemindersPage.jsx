@@ -97,10 +97,20 @@ const RemindersPage = () => {
     setSubmitting(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
-      const response = await axios.post(`${apiUrl}/reminders`, {
+      
+      // Format the submission data to match the model
+      const reminderData = {
         ...newReminder,
-        actionType: 'create_reminder' // Add action type to correctly log the activity
-      });
+        // Add any missing fields with defaults
+        priority: newReminder.priority || 'Medium',
+        status: 'Pending',
+        user: 'DemoAdmin', // Or get from authentication if available
+        actionType: 'create_reminder'
+      };
+      
+      console.log('Submitting reminder:', reminderData); // For debugging
+      
+      const response = await axios.post(`${apiUrl}/reminders`, reminderData);
       
       if (response.data) {
         setReminders(prev => [...prev, response.data]);
@@ -109,7 +119,10 @@ const RemindersPage = () => {
       }
     } catch (error) {
       console.error('Error creating reminder:', error);
-      toast.error('Failed to create reminder');
+      
+      // More detailed error message
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to create reminder';
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }

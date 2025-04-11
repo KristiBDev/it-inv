@@ -10,37 +10,51 @@ const router = express.Router();
 router.post('/', async (request, response) => {
   try {
     // Extract fields from request body
-    const { title, description, dueDate, itemId, actionType } = request.body;
+    const { title, description, dueDate, itemId, itemName, priority, status, user, actionType } = request.body;
+
+    console.log('Received reminder data:', request.body); // Add logging for debugging
 
     // Validate required fields
     if (!title || !dueDate) {
       return response.status(400).json({ message: 'Title and due date are required fields' });
     }
 
-    // Create a new reminder
+    // Create a new reminder with all possible fields from the model
     const newReminder = {
       title,
-      description,
+      description: description || '',
       dueDate,
       itemId: itemId || null,
+      itemName: itemName || '',
+      priority: priority || 'Medium',
+      status: status || 'Pending',
+      user: user || request.headers['x-user-name'] || 'DemoAdmin'
     };
 
+    console.log('Creating reminder with data:', newReminder); // Add logging
+
+    // Create the reminder
     const reminder = await Reminder.create(newReminder);
 
-    // Log the activity
-    const username = request.headers['x-user-name'] || 'Anonymous';
-    await Log.create({
-      username,
-      action: 'create_reminder',
-      itemId: itemId || 'N/A',
-      details: `Created reminder "${title}"`,
-      timestamp: new Date(),
-    });
+    // Log the activity if Log model is available
+    try {
+      const username = request.headers['x-user-name'] || 'DemoAdmin';
+      await Log.create({
+        username,
+        action: 'create_reminder',
+        itemId: itemId || 'N/A',
+        details: `Created reminder "${title}"`,
+        timestamp: new Date(),
+      });
+    } catch (logError) {
+      // If logging fails, just log the error but don't fail the request
+      console.error('Error logging reminder creation:', logError);
+    }
 
     return response.status(201).json(reminder);
   } catch (error) {
     console.error('Error creating reminder:', error);
-    response.status(500).json({ message: 'Error creating reminder' });
+    response.status(500).json({ message: 'Error creating reminder', error: error.message });
   }
 });
 
