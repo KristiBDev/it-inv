@@ -1,10 +1,10 @@
 import express from "express";
 import { PORT, mongoDBURL } from "./config.js";
 import mongoose from "mongoose";
-import itemsRoute from "./routes/itemsRoute.js";
+import itemRoutes from "./routes/itemsRoute.js";
 import logsRoute from "./routes/logsRoute.js";
 import notesRoute from "./routes/notesRoute.js";
-import remindersRoute from "./routes/remindersRoute.js";
+import reminderRoutes from "./routes/reminderRoutes.js";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -32,10 +32,10 @@ console.log(" - /notes");
 console.log(" - /reminders");
 
 // Use routes
-app.use("/items", itemsRoute);
+app.use("/items", itemRoutes);
 app.use("/logs", logsRoute);
 app.use("/notes", notesRoute);
-app.use("/reminders", remindersRoute);
+app.use("/reminders", reminderRoutes);
 
 // Root route
 app.get("/", (request, response) => {

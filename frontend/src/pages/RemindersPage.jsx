@@ -58,7 +58,7 @@ const RemindersPage = () => {
     };
 
     fetchReminders();
-  }, []);
+  }, []); // This effect runs only once when component mounts
 
   // Handle reminder creation modal
   const handleCreateReminder = () => {
@@ -97,7 +97,10 @@ const RemindersPage = () => {
     setSubmitting(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
-      const response = await axios.post(`${apiUrl}/reminders`, newReminder);
+      const response = await axios.post(`${apiUrl}/reminders`, {
+        ...newReminder,
+        actionType: 'create_reminder' // Add action type to correctly log the activity
+      });
       
       if (response.data) {
         setReminders(prev => [...prev, response.data]);
@@ -116,7 +119,9 @@ const RemindersPage = () => {
   const handleDeleteReminder = async (id) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
-      await axios.delete(`${apiUrl}/reminders/${id}`);
+      await axios.delete(`${apiUrl}/reminders/${id}`, {
+        data: { actionType: 'delete_reminder' } // Add action type to correctly log the activity
+      });
       setReminders(reminders.filter(reminder => reminder._id !== id));
       toast.success('Reminder deleted successfully');
     } catch (error) {

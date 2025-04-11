@@ -60,4 +60,5 @@ reminderSchema.pre("save", function (next) {
     next();
 });
 
-export const Reminder = mongoose.model("Reminder", reminderSchema);
+// Export as a named export instead of default export
+export const Reminder = mongoose.model("Reminder", reminderSchema, "reminders");
