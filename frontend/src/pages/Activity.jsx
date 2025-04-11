@@ -163,7 +163,7 @@ const Activity = () => {
       </div>
 
       {/* Search and Filter Bar */}
-      <div className="mb-4 bg-white p-4 rounded-lg shadow">
+      <div className="mb-4 p-4 rounded-lg shadow">
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Text Search */}
         <div className="relative flex-grow max-w-md">
@@ -172,7 +172,7 @@ const Activity = () => {
             placeholder="Search activity logs..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="w-full p-2 pl-10 border border-gray-300 rounded-lg"
+            className="w-full p-2 pl-10 border  rounded-lg"
           />
           <div className="absolute left-3 top-2.5 text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
