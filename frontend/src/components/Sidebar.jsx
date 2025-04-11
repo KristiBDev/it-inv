@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { AiOutlineDashboard, AiOutlineUnorderedList, AiOutlinePlus, AiOutlineBell, AiOutlineClockCircle } from 'react-icons/ai';
 import { FaHistory } from 'react-icons/fa'; // Add this import for the activity icon
 import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from './ThemeToggle';
 
 const Sidebar = ({ collapsed, toggleSidebar }) => {
   const { isNightMode } = useTheme();
@@ -20,15 +21,26 @@ const Sidebar = ({ collapsed, toggleSidebar }) => {
     <div className={`sidebar transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'} h-screen fixed top-0 left-0 overflow-y-auto`}>
       <div className="p-4 flex items-center justify-between">
         {!collapsed && <h2 className="text-xl font-bold">IT Inventory</h2>}
-        <button 
-          onClick={toggleSidebar} 
-          className="app-btn app-btn-secondary p-1"
-        >
-          {collapsed ? '→' : '←'}
-        </button>
+        <div className="flex items-center gap-2">
+          
+          <button 
+            onClick={toggleSidebar} 
+            className="app-btn app-btn-secondary p-1"
+          >
+            {collapsed ? '→' : '←'}
+          </button>
+        </div>
+        
       </div>
-
-      <div className="mt-8">
+    
+      <div className={`px-4 py-2 flex ${collapsed ? 'justify-center' : 'justify-end'}`}>
+        <div className={collapsed ? 'scale-75' : ''}>
+          <ThemeToggle />
+        </div>
+      </div>
+    
+      <div className="mt-4"> 
+      
         {menuItems.map((item) => (
           <NavLink
             key={item.path}

@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import ThemeToggle from '../components/ThemeToggle';
-import { useTheme } from '../contexts/ThemeContext';
 import ItemList from '../components/ItemList';
 
 const Home = () => {
@@ -12,7 +10,6 @@ const Home = () => {
   const [refresh, setRefresh] = useState(false);
   const [logs, setLogs] = useState([]);
   const [logsLoading, setLogsLoading] = useState(false);
-  const { isNightMode } = useTheme();
 
   useEffect(() => {
     setLoading(true);
@@ -56,7 +53,6 @@ const Home = () => {
     <div className="p-6 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-4xl font-bold tracking-wide">IT Inventory Dashboard</h1>
-        <ThemeToggle />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
