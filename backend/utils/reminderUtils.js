@@ -5,21 +5,35 @@ import { Item } from "../models/itemModel.js";
 // Create log entry for reminder creation
 export const createReminderLog = async (reminder, user = "DemoAdmin") => {
     try {
-        let details = `User ${user} created reminder "${reminder.title}"`;
-        if (reminder.itemId) {
+        let details = `${user} added a reminder "${reminder.title}"`;
+        
+        // Only add item reference if this reminder is connected to an actual item
+        if (reminder.itemId && reminder.itemId !== 'standalone') {
             details += ` for item ${reminder.itemName} (${reminder.itemId})`;
+            
+            await Log.create({
+                logType: 'reminder',
+                itemId: reminder.itemId,
+                itemName: reminder.itemName,
+                action: 'create', // Changed from 'update' to 'create'
+                user,
+                details,
+                changes: {
+                    reminder: { added: `${reminder.title} - Due: ${new Date(reminder.dueDate).toLocaleDateString()}` }
+                },
+            });
+        } else {
+            // For standalone reminders, don't include itemId or itemName
+            await Log.create({
+                logType: 'reminder',
+                action: 'create', // Changed from 'update' to 'create'
+                user,
+                details,
+                changes: {
+                    reminder: { added: `${reminder.title} - Due: ${new Date(reminder.dueDate).toLocaleDateString()}` }
+                },
+            });
         }
-
-        await Log.create({
-            itemId: reminder.itemId || 'standalone',
-            itemName: reminder.itemName || 'N/A',
-            action: 'update',
-            user,
-            details,
-            changes: {
-                reminder: { added: `${reminder.title} - Due: ${new Date(reminder.dueDate).toLocaleDateString()}` }
-            },
-        });
     } catch (error) {
         console.error("Error creating reminder log:", error);
     }
@@ -46,19 +60,31 @@ export const updateReminderLog = async (reminder, oldReminder, user = "DemoAdmin
             changes.status = { from: oldReminder.status, to: reminder.status };
 
         // Create description text
-        let details = `User ${user} updated reminder "${reminder.title}"`;
-        if (reminder.itemId) {
+        let details = `${user} updated reminder "${reminder.title}"`;
+        
+        // Only include item reference if reminder is connected to an item
+        if (reminder.itemId && reminder.itemId !== 'standalone') {
             details += ` for item ${reminder.itemName} (${reminder.itemId})`;
+            
+            await Log.create({
+                logType: 'reminder',
+                itemId: reminder.itemId,
+                itemName: reminder.itemName,
+                action: 'update',
+                user,
+                details,
+                changes,
+            });
+        } else {
+            // For standalone reminders
+            await Log.create({
+                logType: 'reminder',
+                action: 'update',
+                user,
+                details,
+                changes,
+            });
         }
-
-        await Log.create({
-            itemId: reminder.itemId || 'standalone',
-            itemName: reminder.itemName || 'N/A',
-            action: 'update',
-            user,
-            details,
-            changes,
-        });
     } catch (error) {
         console.error("Error creating reminder update log:", error);
     }
@@ -67,21 +93,35 @@ export const updateReminderLog = async (reminder, oldReminder, user = "DemoAdmin
 // Create log entry for reminder deletion
 export const deleteReminderLog = async (reminder, user = "DemoAdmin") => {
     try {
-        let details = `User ${user} deleted reminder "${reminder.title}"`;
-        if (reminder.itemId) {
-            details += ` for item ${reminder.itemName} (${reminder.itemId})`;
-        }
+        let details = `${user} deleted reminder "${reminder.title}"`;
         
-        await Log.create({
-            itemId: reminder.itemId || 'standalone',
-            itemName: reminder.itemName || 'N/A',
-            action: 'update', // Make sure this matches the enum in your Log model
-            user,
-            details,
-            changes: {
-                reminder: { removed: `${reminder.title} - Due: ${new Date(reminder.dueDate).toLocaleDateString()}` }
-            },
-        });
+        // Only include item reference if reminder is connected to an item
+        if (reminder.itemId && reminder.itemId !== 'standalone') {
+            details += ` for item ${reminder.itemName} (${reminder.itemId})`;
+            
+            await Log.create({
+                logType: 'reminder',
+                itemId: reminder.itemId,
+                itemName: reminder.itemName,
+                action: 'delete', // Changed from 'update' to 'delete'
+                user,
+                details,
+                changes: {
+                    reminder: { removed: `${reminder.title} - Due: ${new Date(reminder.dueDate).toLocaleDateString()}` }
+                },
+            });
+        } else {
+            // For standalone reminders
+            await Log.create({
+                logType: 'reminder',
+                action: 'delete', // Changed from 'update' to 'delete'
+                user,
+                details,
+                changes: {
+                    reminder: { removed: `${reminder.title} - Due: ${new Date(reminder.dueDate).toLocaleDateString()}` }
+                },
+            });
+        }
     } catch (error) {
         console.error("Error creating reminder deletion log:", error);
     }

@@ -106,41 +106,51 @@ const Home = () => {
                     </span>
                   </div>
                   
-                  <p className="font-medium mt-1">
-                    <span className="font-bold">{log.user}</span> {log.action === 'create' ? 'created' : log.action === 'update' ? 'updated' : 'deleted'} item{' '}
-                    {log.action !== 'delete' ? (
-                      <Link 
-                        to={`/items/edit/${log.itemId}`}
-                        className="text-blue-500 hover:underline font-bold"
-                      >
-                        {log.itemName}
-                      </Link>
-                    ) : (
-                      <span className="font-bold">{log.itemName}</span>
-                    )} ({log.itemId})
-                  </p>
+                  {/* Render differently based on log type */}
+                  {log.logType === 'reminder' ? (
+                    <p className="font-medium mt-1">
+                      {log.details}
+                    </p>
+                  ) : (
+                    <p className="font-medium mt-1">
+                      <span className="font-bold">{log.user}</span> {log.action === 'create' ? 'created' : log.action === 'update' ? 'updated' : 'deleted'} item{' '}
+                      {log.action !== 'delete' ? (
+                        <Link 
+                          to={`/items/edit/${log.itemId}`}
+                          className="text-blue-500 hover:underline font-bold"
+                        >
+                          {log.itemName}
+                        </Link>
+                      ) : (
+                        <span className="font-bold">{log.itemName}</span>
+                      )} ({log.itemId})
+                    </p>
+                  )}
                   
-                  <p className="mt-1 text-secondary text-sm">
-                    {log.action === 'delete' ? (
-                      <>
-                        <strong>Deleted item details:</strong> {log.changes && Object.keys(log.changes).length > 0 ? (
-                          <span className="block mt-1 ml-2">
-                            {Object.entries(log.changes).map(([field, value]) => (
-                              <span key={field} className="block">
-                                <strong className="capitalize">{field}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value}
-                              </span>
-                            ))}
-                          </span>
-                        ) : (
-                          'No item details available'
-                        )}
-                      </>
-                    ) : (
-                      log.details && typeof log.details === 'string'
-                        ? log.details.replace(`User ${log.user} ${log.action}d item ${log.itemName} (${log.itemId})`, '').trim() || 'No additional details'
-                        : 'No details available'
-                    )}
-                  </p>
+                  {/* Only show additional details for non-reminder logs */}
+                  {log.logType !== 'reminder' && (
+                    <p className="mt-1 text-secondary text-sm">
+                      {log.action === 'delete' ? (
+                        <>
+                          <strong>Deleted item details:</strong> {log.changes && Object.keys(log.changes).length > 0 ? (
+                            <span className="block mt-1 ml-2">
+                              {Object.entries(log.changes).map(([field, value]) => (
+                                <span key={field} className="block">
+                                  <strong className="capitalize">{field}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value}
+                                </span>
+                              ))}
+                            </span>
+                          ) : (
+                            'No item details available'
+                          )}
+                        </>
+                      ) : (
+                        log.details && typeof log.details === 'string'
+                          ? log.details.replace(`User ${log.user} ${log.action}d item ${log.itemName} (${log.itemId})`, '').trim() || 'No additional details'
+                          : 'No details available'
+                      )}
+                    </p>
+                  )}
                   
                 </div>
               ))}

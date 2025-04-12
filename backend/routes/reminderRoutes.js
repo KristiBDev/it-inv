@@ -12,7 +12,7 @@ router.post('/', async (request, response) => {
     // Extract fields from request body
     const { title, description, dueDate, itemId, itemName, priority, status, user, actionType } = request.body;
 
-    console.log('Received reminder data:', request.body); // Add logging for debugging
+    console.log('Received reminder data:', request.body);
 
     // Validate required fields
     if (!title || !dueDate) {
@@ -31,7 +31,7 @@ router.post('/', async (request, response) => {
       user: user || request.headers['x-user-name'] || 'DemoAdmin'
     };
 
-    console.log('Creating reminder with data:', newReminder); // Add logging
+    console.log('Creating reminder with data:', newReminder);
 
     // Create the reminder
     const reminder = await Reminder.create(newReminder);
@@ -40,16 +40,14 @@ router.post('/', async (request, response) => {
     try {
       const username = request.headers['x-user-name'] || 'DemoAdmin';
       await Log.create({
+        logType: 'reminder',
         username: username,
-        // Use 'update' which is an allowed enum value rather than 'create_reminder'
-        action: 'create',
-        itemId: itemId || 'standalone-reminder',
-        itemName: itemName || 'Standalone Reminder',
-        details: `Created reminder "${title}"`,
+        user: username, // Make sure user field is populated correctly
+        action: 'create', // Changed from 'update' to 'create'
+        details: `${username} added a reminder "${title}"`,
         timestamp: new Date(),
       });
     } catch (logError) {
-      // If logging fails, just log the error but don't fail the request
       console.error('Error logging reminder creation:', logError);
     }
 
@@ -92,13 +90,13 @@ router.delete('/:id', async (request, response) => {
     await Reminder.findByIdAndDelete(id);
 
     // Log the activity
-    const username = request.headers['x-user-name'] || 'Anonymous';
+    const username = request.headers['x-user-name'] || 'DemoAdmin'; // Changed from 'Anonymous' to 'DemoAdmin'
     await Log.create({
+      logType: 'reminder',
       username: username,
-      action: 'update',  // Use 'update' which is an allowed enum value
-      itemId: reminder.itemId || 'standalone-reminder',
-      itemName: reminder.itemName || 'Standalone Reminder',
-      details: `Deleted reminder "${reminder.title}"`,
+      user: username, // Make sure user field is populated correctly
+      action: 'delete', // Changed from 'update' to 'delete'
+      details: `${username} deleted reminder "${reminder.title}"`,
       timestamp: new Date(),
     });
 

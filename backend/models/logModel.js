@@ -2,13 +2,20 @@ import mongoose from "mongoose";
 
 const logSchema = mongoose.Schema(
     {
+        logType: {
+            type: String,
+            enum: ['item', 'reminder'],
+            default: 'item'
+        },
         itemId: {
             type: String,
-            required: true,
+            required: function() {
+                // Only require itemId for item logs, not for reminder logs
+                return this.logType === 'item';
+            }
         },
         itemName: {
             type: String,
-            // Changed from required:true to have a default value for standalone reminders
             default: 'N/A',
         },
         action: {
