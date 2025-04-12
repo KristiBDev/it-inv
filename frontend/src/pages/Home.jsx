@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import ItemList from '../components/ItemList';
+import LogEntry from '../components/LogEntry';
 
 const Home = () => {
   const [items, setItems] = useState([]);
@@ -80,79 +80,7 @@ const Home = () => {
           ) : logs.length > 0 ? (
             <div className="space-y-2">
               {logs.map((log) => (
-                <div 
-                  key={log._id} 
-                  className={`log-entry ${
-                    log.action === 'create'
-                      ? 'log-entry-create'
-                      : log.action === 'update'
-                      ? 'log-entry-update'
-                      : 'log-entry-delete'
-                  }`}
-                >
-                  <div className="flex justify-between items-start flex-wrap gap-2">
-                    <span className="text-sm text-secondary">
-                      {new Date(log.timestamp).toLocaleDateString()} {new Date(log.timestamp).toLocaleTimeString()}
-                    </span>
-                    <span className={`log-badge ${
-                      log.action === 'create'
-                        ? 'log-badge-create'
-                        : log.action === 'update'
-                        ? 'log-badge-update'
-                        : 'log-badge-delete'
-                      }`}
-                    >
-                      {log.action.charAt(0).toUpperCase() + log.action.slice(1)}
-                    </span>
-                  </div>
-                  
-                  {/* Render differently based on log type */}
-                  {log.logType === 'reminder' ? (
-                    <p className="font-medium mt-1">
-                      {log.details}
-                    </p>
-                  ) : (
-                    <p className="font-medium mt-1">
-                      <span className="font-bold">{log.user}</span> {log.action === 'create' ? 'created' : log.action === 'update' ? 'updated' : 'deleted'} item{' '}
-                      {log.action !== 'delete' ? (
-                        <Link 
-                          to={`/items/edit/${log.itemId}`}
-                          className="text-blue-500 hover:underline font-bold"
-                        >
-                          {log.itemName}
-                        </Link>
-                      ) : (
-                        <span className="font-bold">{log.itemName}</span>
-                      )} ({log.itemId})
-                    </p>
-                  )}
-                  
-                  {/* Only show additional details for non-reminder logs */}
-                  {log.logType !== 'reminder' && (
-                    <p className="mt-1 text-secondary text-sm">
-                      {log.action === 'delete' ? (
-                        <>
-                          <strong>Deleted item details:</strong> {log.changes && Object.keys(log.changes).length > 0 ? (
-                            <span className="block mt-1 ml-2">
-                              {Object.entries(log.changes).map(([field, value]) => (
-                                <span key={field} className="block">
-                                  <strong className="capitalize">{field}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value}
-                                </span>
-                              ))}
-                            </span>
-                          ) : (
-                            'No item details available'
-                          )}
-                        </>
-                      ) : (
-                        log.details && typeof log.details === 'string'
-                          ? log.details.replace(`User ${log.user} ${log.action}d item ${log.itemName} (${log.itemId})`, '').trim() || 'No additional details'
-                          : 'No details available'
-                      )}
-                    </p>
-                  )}
-                  
-                </div>
+                <LogEntry key={log._id} log={log} />
               ))}
             </div>
           ) : (
