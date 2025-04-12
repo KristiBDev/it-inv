@@ -75,7 +75,7 @@ export const deleteReminderLog = async (reminder, user = "DemoAdmin") => {
         await Log.create({
             itemId: reminder.itemId || 'standalone',
             itemName: reminder.itemName || 'N/A',
-            action: 'update',
+            action: 'update', // Make sure this matches the enum in your Log model
             user,
             details,
             changes: {

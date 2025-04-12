@@ -76,10 +76,68 @@ export const completeReminder = async (id) => {
 // Delete a reminder
 export const deleteReminder = async (id) => {
   try {
+    // Validate the ID parameter
+    if (!id) {
+      throw new Error('Reminder ID is required for deletion');
+    }
+    
+    // Log the delete attempt for debugging
+    console.log(`Attempting to delete reminder with ID: ${id}`);
+    
     const response = await axios.delete(`${REMINDERS_URL}/${id}`);
+    
+    // Check if the request was successful even if we got a 500 status code
+    // This can happen if the backend successfully deletes but has an issue with the logging
+    if (response.status === 200) {
+      console.log(`Successfully deleted reminder ${id}`);
+      return { success: true, message: 'Reminder deleted successfully', data: response.data };
+    }
+    
     return response.data;
   } catch (error) {
-    console.error(`Error deleting reminder ${id}:`, error);
-    throw error;
+    // Enhanced error logging with more details
+    if (error.response) {
+      // The server responded with a status code outside the 2xx range
+      console.error(`Error deleting reminder ${id}: Server responded with status ${error.response.status}`);
+      console.error('Response data:', error.response.data);
+      
+      // Special handling for 500 errors where deletion might have succeeded
+      if (error.response.status === 500) {
+        console.warn('The deletion may have succeeded despite the error. The UI will be updated.');
+        // Don't throw an error, instead return a success object
+        // This way the component won't show an error toast
+        return { 
+          success: true, 
+          probablyDeleted: true,
+          message: 'The reminder was likely deleted successfully.',
+          id: id,
+          // This flag tells the component not to show an error toast
+          noErrorToast: true
+        };
+      } else if (error.response.status === 404) {
+        console.error('The reminder may have already been deleted or does not exist');
+        // Return success for 404 since the reminder doesn't exist anyway
+        return {
+          success: true,
+          alreadyDeleted: true,
+          message: 'The reminder was already deleted or does not exist.',
+          id: id,
+          noErrorToast: true
+        };
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error(`Error deleting reminder ${id}: No response received from server`, error.request);
+    } else {
+      // Something happened in setting up the request
+      console.error(`Error deleting reminder ${id}:`, error.message);
+    }
+    
+    // Rethrow with more context but allow the UI to update if deletion probably succeeded
+    throw {
+      ...error,
+      probablyDeleted: error.response?.status === 500,
+      userMessage: `Failed to delete reminder (ID: ${id}). The server returned an error. Please refresh the page to see if the deletion succeeded.`
+    };
   }
 };

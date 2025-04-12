@@ -8,7 +8,8 @@ const logSchema = mongoose.Schema(
         },
         itemName: {
             type: String,
-            required: true,
+            // Changed from required:true to have a default value for standalone reminders
+            default: 'N/A',
         },
         action: {
             type: String,

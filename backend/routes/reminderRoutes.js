@@ -40,9 +40,11 @@ router.post('/', async (request, response) => {
     try {
       const username = request.headers['x-user-name'] || 'DemoAdmin';
       await Log.create({
-        username,
-        action: 'create_reminder',
-        itemId: itemId || 'N/A',
+        username: username,
+        // Use 'update' which is an allowed enum value rather than 'create_reminder'
+        action: 'create',
+        itemId: itemId || 'standalone-reminder',
+        itemName: itemName || 'Standalone Reminder',
         details: `Created reminder "${title}"`,
         timestamp: new Date(),
       });
@@ -92,9 +94,10 @@ router.delete('/:id', async (request, response) => {
     // Log the activity
     const username = request.headers['x-user-name'] || 'Anonymous';
     await Log.create({
-      username,
-      action: 'delete_reminder',
-      itemId: reminder.itemId || 'N/A',
+      username: username,
+      action: 'update',  // Use 'update' which is an allowed enum value
+      itemId: reminder.itemId || 'standalone-reminder',
+      itemName: reminder.itemName || 'Standalone Reminder',
       details: `Deleted reminder "${reminder.title}"`,
       timestamp: new Date(),
     });
@@ -102,7 +105,7 @@ router.delete('/:id', async (request, response) => {
     return response.status(200).json({ message: 'Reminder deleted successfully' });
   } catch (error) {
     console.error('Error deleting reminder:', error);
-    response.status(500).json({ message: 'Error deleting reminder' });
+    response.status(500).json({ message: 'Error deleting reminder', error: error.toString() });
   }
 });
 

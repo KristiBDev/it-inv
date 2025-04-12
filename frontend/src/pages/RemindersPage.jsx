@@ -6,6 +6,7 @@ import Spinner from '../components/Spinner';
 import { toast } from 'react-toastify';
 import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../contexts/ThemeContext';
+import { deleteReminder } from '../services/remindersService';
 
 const RemindersPage = () => {
   const [reminders, setReminders] = useState([]);
@@ -261,15 +262,25 @@ const RemindersPage = () => {
   // Handle reminder deletion
   const handleDeleteReminder = async (id) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5555';
-      await axios.delete(`${apiUrl}/reminders/${id}`, {
-        data: { actionType: 'delete_reminder' } // Add action type to correctly log the activity
-      });
+      // Use the imported deleteReminder function
+      const result = await deleteReminder(id);
+      
+      // If we get here with a result, it means deleteReminder didn't throw
+      // and either succeeded or returned a "probably deleted" response
       setReminders(reminders.filter(reminder => reminder._id !== id));
       toast.success('Reminder deleted successfully');
     } catch (error) {
       console.error('Error deleting reminder:', error);
-      toast.error('Failed to delete reminder');
+      
+      // If the error indicates the reminder was probably deleted despite the error
+      if (error.probablyDeleted) {
+        // Still update UI to remove the reminder
+        setReminders(reminders.filter(reminder => reminder._id !== id));
+        toast.info('Reminder was likely deleted despite server errors');
+      } else {
+        // Show error message for other errors
+        toast.error(error.userMessage || 'Failed to delete reminder');
+      }
     }
   };
 
