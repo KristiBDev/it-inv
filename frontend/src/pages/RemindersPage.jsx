@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import Spinner from '../components/Spinner';
 import { toast } from 'react-toastify';
@@ -24,6 +24,27 @@ const RemindersPage = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
   const { isNightMode } = useTheme();
+  const location = useLocation(); // Get location for URL query params
+
+  // Check for itemId in URL params when component mounts
+  useEffect(() => {
+    // Get itemId from URL parameters
+    const params = new URLSearchParams(location.search);
+    const itemIdParam = params.get('itemId');
+    
+    if (itemIdParam) {
+      console.log('ItemId found in URL:', itemIdParam);
+      // Pre-fill the related item field in the new reminder form
+      setNewReminder(prev => ({
+        ...prev,
+        itemId: itemIdParam
+      }));
+      setSearchText(itemIdParam);
+      
+      // Also open the modal if there's an itemId in URL
+      setIsModalOpen(true);
+    }
+  }, [location.search]);
 
   // Debug function to log item structure
   const logItemsStructure = () => {
@@ -33,6 +54,12 @@ const RemindersPage = () => {
     } else {
       console.log('No items loaded');
     }
+  };
+
+  // Helper function to get item details by customId
+  const getItemByCustomId = (customId) => {
+    if (!customId) return null;
+    return items.find(item => item.customId === customId);
   };
 
   useEffect(() => {
@@ -278,37 +305,71 @@ const RemindersPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {reminders.map((reminder, index) => (
-                  <div 
-                    key={reminder._id || reminder.id || index} 
-                    className={`border rounded-lg shadow-sm p-4 ${
-                      isNightMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-medium">{reminder.title}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        new Date(reminder.dueDate) < new Date() 
-                          ? 'bg-red-100 text-red-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      } ${isNightMode ? 'bg-opacity-20' : ''}`}>
-                        {new Date(reminder.dueDate) < new Date() ? 'Overdue' : 'Upcoming'}
-                      </span>
+                {reminders.map((reminder, index) => {
+                  const relatedItem = getItemByCustomId(reminder.itemId);
+                  
+                  return (
+                    <div 
+                      key={reminder._id || reminder.id || index} 
+                      className={`border rounded-lg shadow-sm p-4 ${
+                        isNightMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-medium">{reminder.title}</h3>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          new Date(reminder.dueDate) < new Date() 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        } ${isNightMode ? 'bg-opacity-20' : ''}`}>
+                          {new Date(reminder.dueDate) < new Date() ? 'Overdue' : 'Upcoming'}
+                        </span>
+                      </div>
+                      <p className="text-secondary text-sm mb-3">{reminder.description}</p>
+                      
+                      {/* Display related item if available */}
+                      {reminder.itemId && (
+                        <div className={`mt-2 mb-3 p-2 rounded ${isNightMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                          <div className="flex items-center">
+                            <span className="text-xs font-medium mr-2">Related Item:</span>
+                            <a 
+                              href={`/items/edit/${reminder.itemId}`}
+                              className="text-xs text-blue-500 hover:text-blue-700 hover:underline"
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              {reminder.itemId}
+                              <span className="ml-1 inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                  <polyline points="15 3 21 3 21 9"></polyline>
+                                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                                </svg>
+                              </span>
+                            </a>
+                          </div>
+                          {relatedItem && (
+                            <div className="text-xs text-secondary mt-1 truncate">
+                              {relatedItem.title}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-secondary">
+                          Due: {new Date(reminder.dueDate).toLocaleDateString()}
+                        </span>
+                        <button 
+                          onClick={() => handleDeleteReminder(reminder._id)}
+                          className="text-sm text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-secondary text-sm mb-3">{reminder.description}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-secondary">
-                        Due: {new Date(reminder.dueDate).toLocaleDateString()}
-                      </span>
-                      <button 
-                        onClick={() => handleDeleteReminder(reminder._id)}
-                        className="text-sm text-red-600 hover:text-red-800"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

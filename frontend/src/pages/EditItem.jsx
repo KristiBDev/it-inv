@@ -9,6 +9,7 @@ import ItemTag from '../components/ItemTag';
 import { toast } from 'react-toastify';
 import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../contexts/ThemeContext';
+import { getItemReminders } from '../services/remindersService';
 
 const EditItem = () => {
   const [formData, setFormData] = useState({
@@ -30,6 +31,8 @@ const EditItem = () => {
   const [message, setMessage] = useState('');
   const [refresh, setRefresh] = useState(false);
   const [qrCode, setQrCode] = useState(null);
+  const [reminders, setReminders] = useState([]);
+  const [remindersLoading, setRemindersLoading] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const { isNightMode } = useTheme();
@@ -71,6 +74,11 @@ const EditItem = () => {
         }
         
         setLoading(false);
+        
+        // After loading the item, fetch related reminders
+        if (itemData.customId) {
+          fetchItemReminders(itemData.customId);
+        }
       })
       .catch((error) => {
         console.error(error);
@@ -78,6 +86,28 @@ const EditItem = () => {
         setLoading(false);
       });
   }, [id]);
+  
+  // Function to fetch reminders for the current item
+  const fetchItemReminders = async (itemId) => {
+    setRemindersLoading(true);
+    try {
+      const response = await getItemReminders(itemId);
+      if (response && Array.isArray(response.data)) {
+        setReminders(response.data);
+      } else if (response && Array.isArray(response)) {
+        setReminders(response);
+      } else {
+        console.warn('Unexpected reminders response format:', response);
+        setReminders([]);
+      }
+    } catch (error) {
+      console.error('Error fetching reminders:', error);
+      toast.error('Failed to load reminders');
+      setReminders([]);
+    } finally {
+      setRemindersLoading(false);
+    }
+  };
   
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -468,6 +498,65 @@ const EditItem = () => {
                 onNotesChange={handleNotesChange}
                 isNightMode={isNightMode}
               />
+            </div>
+          </div>
+          
+          {/* Reminders section */}
+          <div className="app-card shadow-lg rounded-lg overflow-hidden mt-8">
+            <div className="app-card-header flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Item Reminders</h2>
+              <a 
+                href={`/reminders?itemId=${item.customId}`}
+                className="app-btn app-btn-primary py-2 px-4"
+              >
+                Add Reminder
+              </a>
+            </div>
+            <div className="p-6">
+              {remindersLoading ? (
+                <div className="p-6 flex justify-center">
+                  <Spinner />
+                </div>
+              ) : reminders.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-lg text-secondary mb-4">No reminders for this item</p>
+                  <p className="text-secondary">Create reminders for maintenance tasks, warranty expirations, or other important dates.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {reminders.map((reminder, index) => (
+                    <div 
+                      key={reminder._id || reminder.id || index} 
+                      className={`border rounded-lg shadow-sm p-4 ${
+                        isNightMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-medium">{reminder.title}</h3>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          new Date(reminder.dueDate) < new Date() 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        } ${isNightMode ? 'bg-opacity-20' : ''}`}>
+                          {new Date(reminder.dueDate) < new Date() ? 'Overdue' : 'Upcoming'}
+                        </span>
+                      </div>
+                      <p className="text-secondary text-sm mb-3">{reminder.description}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-secondary">
+                          Due: {new Date(reminder.dueDate).toLocaleDateString()}
+                        </span>
+                        <a 
+                          href={`/reminders`}
+                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          View Details
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           

@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { API_URL } from '../config';
 
-const REMINDERS_URL = `${API_URL}/reminders`;
+// Get API URL directly from environment variables, matching Home.jsx pattern
+const REMINDERS_URL = `${import.meta.env.VITE_API_URL}/reminders`;
 
 // Get all reminders with optional query parameters
 export const getAllReminders = async (queryString = '') => {
@@ -17,8 +17,23 @@ export const getAllReminders = async (queryString = '') => {
 // Get reminders for a specific item
 export const getItemReminders = async (itemId) => {
   try {
-    const response = await axios.get(`${REMINDERS_URL}/item/${itemId}`);
-    return response.data;
+    // First try to get reminders filtered by the backend
+    const response = await axios.get(`${REMINDERS_URL}?itemId=${itemId}`);
+    
+    // If the backend doesn't filter properly, do client-side filtering
+    let reminders = response.data?.data || response.data || [];
+    
+    // If reminders is an array (not already filtered by backend)
+    if (Array.isArray(reminders)) {
+      // Filter to only include reminders that match the itemId
+      reminders = reminders.filter(reminder => 
+        reminder.itemId === itemId || 
+        reminder.item === itemId ||
+        reminder.itemCustomId === itemId
+      );
+    }
+    
+    return Array.isArray(reminders) ? { data: reminders } : reminders;
   } catch (error) {
     console.error(`Error fetching reminders for item ${itemId}:`, error);
     throw error;
