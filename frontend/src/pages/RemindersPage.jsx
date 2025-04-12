@@ -19,8 +19,21 @@ const RemindersPage = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [items, setItems] = useState([]);
+  const [searchText, setSearchText] = useState('');
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
   const { isNightMode } = useTheme();
+
+  // Debug function to log item structure
+  const logItemsStructure = () => {
+    if (items.length > 0) {
+      console.log('Sample item structure:', items[0]);
+      console.log('customId exists?', items.some(item => item.customId));
+    } else {
+      console.log('No items loaded');
+    }
+  };
 
   useEffect(() => {
     const fetchReminders = async () => {
@@ -32,6 +45,8 @@ const RemindersPage = () => {
         // Make sure we always set an array to the reminders state
         if (Array.isArray(response.data)) {
           setReminders(response.data);
+        } else if (response.data && Array.isArray(response.data.data)) {
+          setReminders(response.data.data);
         } else if (response.data && Array.isArray(response.data.reminders)) {
           setReminders(response.data.reminders);
         } else {
@@ -39,19 +54,25 @@ const RemindersPage = () => {
           setReminders([]); // Set to empty array if response format is unexpected
         }
         
-        // Fetch items for dropdown menu
+        // Fetch items for dropdown menu - fixed to handle the data structure properly
         const itemsResponse = await axios.get(`${apiUrl}/items`);
+        console.log('Items response:', itemsResponse.data);
+        
         if (Array.isArray(itemsResponse.data)) {
           setItems(itemsResponse.data);
+        } else if (itemsResponse.data && Array.isArray(itemsResponse.data.data)) {
+          setItems(itemsResponse.data.data);
         } else if (itemsResponse.data && Array.isArray(itemsResponse.data.items)) {
           setItems(itemsResponse.data.items);
         } else {
+          console.warn('Items API did not return an array:', itemsResponse.data);
           setItems([]);
         }
       } catch (error) {
-        console.error('Error fetching reminders:', error);
-        toast.error('Failed to load reminders');
-        setReminders([]); // Set to empty array on error
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load data');
+        setReminders([]);
+        setItems([]);
       } finally {
         setLoading(false);
       }
@@ -59,6 +80,63 @@ const RemindersPage = () => {
 
     fetchReminders();
   }, []); // This effect runs only once when component mounts
+
+  // Log items structure after they're loaded
+  useEffect(() => {
+    if (items.length > 0) {
+      logItemsStructure();
+    }
+  }, [items]);
+
+  // Filter items based on search text with improved debugging
+  useEffect(() => {
+    if (!searchText.trim()) {
+      setFilteredItems([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    console.log('Searching for:', searchText);
+    console.log('Items available:', items.length);
+    
+    // First try with customId property
+    let matchingItems = items.filter(item => 
+      item.customId && item.customId.toLowerCase().includes(searchText.toLowerCase())
+    );
+    
+    // If no matches found, try alternative property names
+    if (matchingItems.length === 0) {
+      const alternativeNames = ['custom_id', 'customID', 'inventoryId', 'inventory_id'];
+      
+      alternativeNames.forEach(propName => {
+        if (matchingItems.length === 0) {
+          matchingItems = items.filter(item => 
+            item[propName] && item[propName].toLowerCase().includes(searchText.toLowerCase())
+          );
+          if (matchingItems.length > 0) {
+            console.log(`Found matches using property: ${propName}`);
+          }
+        }
+      });
+    }
+    
+    // Additional fallback to search in title if still no matches
+    if (matchingItems.length === 0) {
+      matchingItems = items.filter(item => 
+        item.title && item.title.toLowerCase().includes(searchText.toLowerCase())
+      );
+      if (matchingItems.length > 0) {
+        console.log('Found matches in title instead of customId');
+      }
+    }
+    
+    console.log('Matching items found:', matchingItems.length);
+    
+    // Limit to 5 results
+    const limitedMatches = matchingItems.slice(0, 5);
+    setFilteredItems(limitedMatches);
+    setShowDropdown(limitedMatches.length > 0);
+  }, [searchText, items]);
 
   // Handle reminder creation modal
   const handleCreateReminder = () => {
@@ -74,6 +152,8 @@ const RemindersPage = () => {
       dueDate: '',
       itemId: ''
     });
+    setSearchText('');
+    setShowDropdown(false);
   };
   
   // Handle input change for new reminder
@@ -83,6 +163,26 @@ const RemindersPage = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  // Handle search input change with additional logging
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    console.log('Search input changed:', value);
+    setSearchText(value);
+  };
+
+  // Modified item selection handler to use customId instead of _id
+  const handleSelectItem = (item) => {
+    setNewReminder(prev => ({
+      ...prev,
+      itemId: item.customId // Using customId which is what the backend expects
+    }));
+    setSearchText(item.customId);
+    setShowDropdown(false);
+    
+    console.log('Selected item:', item);
+    console.log('Set itemId to:', item.customId);
   };
   
   // Submit new reminder
@@ -101,14 +201,17 @@ const RemindersPage = () => {
       // Format the submission data to match the model
       const reminderData = {
         ...newReminder,
+        // If we have searchText but no itemId, try to find the item by customId
+        itemId: newReminder.itemId || 
+                (searchText ? items.find(i => i.customId === searchText)?.customId || searchText : ''),
         // Add any missing fields with defaults
         priority: newReminder.priority || 'Medium',
         status: 'Pending',
-        user: 'DemoAdmin', // Or get from authentication if available
+        user: 'DemoAdmin',
         actionType: 'create_reminder'
       };
       
-      console.log('Submitting reminder:', reminderData); // For debugging
+      console.log('Submitting reminder:', reminderData);
       
       const response = await axios.post(`${apiUrl}/reminders`, reminderData);
       
@@ -265,21 +368,31 @@ const RemindersPage = () => {
                 />
               </div>
               
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-secondary mb-1">Related Item (Optional)</label>
-                <select
-                  name="itemId"
-                  value={newReminder.itemId}
-                  onChange={handleInputChange}
-                  className="app-select shadow-sm w-full"
-                >
-                  <option value="">-- Select Item --</option>
-                  {items.map((item) => (
-                    <option key={item._id} value={item._id}>
-                      {item.title} ({item.customId})
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  value={searchText}
+                  onChange={handleSearchChange}
+                  className="app-input shadow-sm w-full"
+                  placeholder="Search by custom ID (e.g. INV-932418)"
+                />
+
+                {/* Autocomplete dropdown */}
+                {showDropdown && (
+                  <div className={`absolute z-10 w-full mt-1 max-h-60 overflow-auto rounded-md shadow-lg ${isNightMode ? 'bg-gray-700' : 'bg-white'} border ${isNightMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                    {filteredItems.map((item) => (
+                      <div
+                        key={item._id}
+                        onClick={() => handleSelectItem(item)}
+                        className={`px-4 py-2 text-sm cursor-pointer hover:${isNightMode ? 'bg-gray-600' : 'bg-gray-100'}`}
+                      >
+                        <div className="font-medium">{item.customId}</div>
+                        <div className="text-xs text-secondary">{item.title}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div className="flex justify-end gap-3 pt-4">
