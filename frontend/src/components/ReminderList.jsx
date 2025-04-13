@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { isPast, isToday, isThisMonth } from 'date-fns';
 import { FaCheckCircle, FaExclamationTriangle, FaClock, FaTrash, FaEye, FaLink, FaCalendarAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Spinner from './Spinner';
 
-// Export stats object without initial values
-export const homePageStats = {
-  overdue: undefined,
-  thisMonth: undefined
-};
-
-const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNightMode }) => {
-  // Group reminders by status
+const ReminderList = ({ reminders, isLoading: propsLoading, onComplete, onDelete, onView, isNightMode }) => {
   const [groupedReminders, setGroupedReminders] = useState({
     overdue: [],
     today: [],
@@ -19,44 +13,83 @@ const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNi
     upcoming: [],
     completed: []
   });
+  const [isLoading, setIsLoading] = useState(propsLoading || false);
 
   useEffect(() => {
-    if (!reminders) return;
+    // If reminders are passed directly, use them
+    if (reminders && reminders.length > 0) {
+      const grouped = {
+        overdue: [],
+        today: [],
+        thisMonth: [],
+        upcoming: [],
+        completed: []
+      };
 
-    const grouped = {
-      overdue: [],
-      today: [],
-      thisMonth: [],
-      upcoming: [],
-      completed: []
-    };
+      reminders.forEach(reminder => {
+        const dueDate = new Date(reminder.dueDate);
+        
+        if (reminder.status === 'Completed') {
+          grouped.completed.push(reminder);
+        } else if (reminder.status === 'Overdue' || (isPast(dueDate) && !isToday(dueDate))) {
+          grouped.overdue.push(reminder);
+        } else if (isToday(dueDate)) {
+          grouped.today.push(reminder);
+        } else if (isThisMonth(dueDate) && !isToday(dueDate)) {
+          grouped.thisMonth.push(reminder);
+        } else {
+          grouped.upcoming.push(reminder);
+        }
+      });
 
-    reminders.forEach(reminder => {
-      const dueDate = new Date(reminder.dueDate);
-      
-      if (reminder.status === 'Completed') {
-        grouped.completed.push(reminder);
-      } else if (reminder.status === 'Overdue' || (isPast(dueDate) && !isToday(dueDate))) {
-        grouped.overdue.push(reminder);
-      } else if (isToday(dueDate)) {
-        grouped.today.push(reminder);
-      } else if (isThisMonth(dueDate) && !isToday(dueDate)) {
-        // Add to "Due this month" category if it's due this month but not today
-        grouped.thisMonth.push(reminder);
-      } else {
-        grouped.upcoming.push(reminder);
-      }
-    });
-
-    setGroupedReminders(grouped);
-    
-    // Update the homePageStats directly from grouped reminders
-    homePageStats.overdue = grouped.overdue.length;
-    homePageStats.thisMonth = grouped.thisMonth.length;
-    
-    console.log("Updated homePageStats in ReminderList:", homePageStats);
-    
+      setGroupedReminders(grouped);
+    } else {
+      // Otherwise fetch grouped reminders from the backend
+      fetchGroupedReminders();
+    }
   }, [reminders]);
+
+  const fetchGroupedReminders = async () => {
+    setIsLoading(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      
+      // Try the stats endpoint for grouped data
+      try {
+        const response = await axios.get(`${apiUrl}/reminders/stats`);
+        
+        if (response.data && response.data.grouped) {
+          setGroupedReminders(response.data.grouped);
+          setIsLoading(false);
+          return;
+        }
+      } catch (statsError) {
+        console.error("Stats endpoint not available, falling back:", statsError);
+      }
+      
+      // Fall back to fetching all reminders
+      const response = await axios.get(`${apiUrl}/reminders`);
+      const allReminders = response.data.data || [];
+      
+      // Group reminders manually
+      const grouped = {
+        overdue: [],
+        today: [],
+        thisMonth: [],
+        upcoming: [],
+        completed: []
+      };
+
+      // ...existing code for manual grouping...
+      
+      setGroupedReminders(grouped);
+      
+    } catch (error) {
+      console.error("Error fetching reminders:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Get status icon for a reminder
   const getStatusIcon = (reminder) => {

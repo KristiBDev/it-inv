@@ -3,6 +3,7 @@ import { Reminder } from "../models/reminderModel.js";
 import { Item } from "../models/itemModel.js";
 import { apiLimiter, getLimiter } from "../rateLimiter.js";
 import { createReminderLog, updateReminderLog, deleteReminderLog, checkOverdueReminders } from "../utils/reminderUtils.js";
+import { isPast, isToday, isThisMonth } from "date-fns";
 
 const router = express.Router();
 
@@ -194,6 +195,150 @@ router.delete("/util/deleteAll", async (request, response) => {
         });
     } catch (error) {
         console.error("Error deleting reminders:", error.message);
+        return response.status(500).send({ message: error.message });
+    }
+});
+
+// New endpoint to get dashboard stats
+router.get("/stats/dashboard", getLimiter, async (request, response) => {
+    try {
+        // Update any overdue reminders before calculating stats
+        await checkOverdueReminders();
+        
+        const now = new Date();
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of current month
+        
+        // Count overdue reminders
+        const overdueCount = await Reminder.countDocuments({
+            status: 'Overdue'
+        });
+        
+        // Count upcoming reminders due this month (excluding today and completed)
+        const thisMonthCount = await Reminder.countDocuments({
+            dueDate: { $gt: now, $lte: endOfMonth },
+            status: { $ne: 'Completed' }
+        });
+        
+        return response.status(200).json({
+            overdue: overdueCount,
+            thisMonth: thisMonthCount
+        });
+    } catch (error) {
+        console.log(error.message);
+        return response.status(500).send({ message: error.message });
+    }
+});
+
+// New endpoint to get grouped reminders
+router.get("/grouped", getLimiter, async (request, response) => {
+    try {
+        // Update any overdue reminders before serving the request
+        await checkOverdueReminders();
+        
+        const now = new Date();
+        
+        // Get all reminders
+        const allReminders = await Reminder.find().sort({ dueDate: 1 });
+        
+        // Group reminders by status
+        const grouped = {
+            overdue: [],
+            today: [],
+            thisMonth: [],
+            upcoming: [],
+            completed: []
+        };
+        
+        // Count for dashboard stats
+        let overdueCount = 0;
+        let thisMonthCount = 0;
+        
+        allReminders.forEach(reminder => {
+            const dueDate = new Date(reminder.dueDate);
+            
+            if (reminder.status === 'Completed') {
+                grouped.completed.push(reminder);
+            } else if (reminder.status === 'Overdue' || (isPast(dueDate) && !isToday(dueDate))) {
+                grouped.overdue.push(reminder);
+                overdueCount++;
+            } else if (isToday(dueDate)) {
+                grouped.today.push(reminder);
+            } else if (isThisMonth(dueDate) && !isToday(dueDate)) {
+                grouped.thisMonth.push(reminder);
+                thisMonthCount++;
+            } else {
+                grouped.upcoming.push(reminder);
+            }
+        });
+        
+        return response.status(200).json({
+            stats: {
+                overdue: overdueCount,
+                thisMonth: thisMonthCount,
+                total: allReminders.length,
+                completed: grouped.completed.length
+            },
+            grouped
+        });
+    } catch (error) {
+        console.log(error.message);
+        return response.status(500).send({ message: error.message });
+    }
+});
+
+// New endpoint for all dashboard and grouping needs
+router.get("/stats", getLimiter, async (request, response) => {
+    try {
+        // Update any overdue reminders before serving the request
+        await checkOverdueReminders();
+        
+        const now = new Date();
+        
+        // Get all reminders
+        const allReminders = await Reminder.find().sort({ dueDate: 1 });
+        
+        // Group reminders by status
+        const grouped = {
+            overdue: [],
+            today: [],
+            thisMonth: [],
+            upcoming: [],
+            completed: []
+        };
+        
+        // Count for dashboard stats
+        let overdueCount = 0;
+        let thisMonthCount = 0;
+        
+        allReminders.forEach(reminder => {
+            const dueDate = new Date(reminder.dueDate);
+            
+            if (reminder.status === 'Completed') {
+                grouped.completed.push(reminder);
+            } else if (reminder.status === 'Overdue' || (isPast(dueDate) && !isToday(dueDate))) {
+                grouped.overdue.push(reminder);
+                overdueCount++;
+            } else if (isToday(dueDate)) {
+                grouped.today.push(reminder);
+            } else if (isThisMonth(dueDate) && !isToday(dueDate)) {
+                grouped.thisMonth.push(reminder);
+                thisMonthCount++;
+            } else {
+                grouped.upcoming.push(reminder);
+            }
+        });
+        
+        return response.status(200).json({
+            stats: {
+                overdue: overdueCount,
+                thisMonth: thisMonthCount,
+                total: allReminders.length,
+                completed: grouped.completed.length
+            },
+            grouped
+        });
+    } catch (error) {
+        console.log(error.message);
         return response.status(500).send({ message: error.message });
     }
 });

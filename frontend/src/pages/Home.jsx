@@ -4,7 +4,6 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import ItemList from '../components/ItemList';
 import LogEntry from '../components/LogEntry';
-import { homePageStats } from '../components/ReminderList';
 
 const Home = () => {
   const [items, setItems] = useState([]);
@@ -12,6 +11,8 @@ const Home = () => {
   const [refresh, setRefresh] = useState(false);
   const [logs, setLogs] = useState([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [reminderStats, setReminderStats] = useState({ overdue: 0, thisMonth: 0 });
+  const [statsLoading, setStatsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,6 +53,29 @@ const Home = () => {
       });
   }, [refresh]);
 
+  // Updated effect to fetch from the dedicated stats endpoint
+  useEffect(() => {
+    setStatsLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL;
+    
+    // Use the new dedicated stats endpoint
+    axios
+      .get(`${apiUrl}/stats/dashboard`)
+      .then((response) => {
+        if (response.data && response.data.reminders) {
+          setReminderStats(response.data.reminders);
+          
+          // Could also update item stats if needed
+          // const itemStats = response.data.items;
+        }
+        setStatsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching dashboard stats:", error);
+        setStatsLoading(false);
+      });
+  }, [refresh]);
+
   return (
     <div className="p-6 min-h-screen">
       <div className="flex justify-between items-center mb-6">
@@ -79,12 +103,18 @@ const Home = () => {
         >
           <h2 className="text-xl font-semibold">Reminders</h2>
           <div className="mt-2">
-            <p className="text-lg">
-              <span className="font-bold text-red-300">{homePageStats.overdue}</span> Overdue
-            </p>
-            <p className="text-lg">
-              <span className="font-bold text-yellow-300">{homePageStats.thisMonth}</span> Due this month
-            </p>
+            {statsLoading ? (
+              <p className="text-lg">Loading...</p>
+            ) : (
+              <>
+                <p className="text-lg">
+                  <span className="font-bold text-red-300">{reminderStats.overdue}</span> Overdue
+                </p>
+                <p className="text-lg">
+                  <span className="font-bold text-yellow-300">{reminderStats.thisMonth}</span> Due this month
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

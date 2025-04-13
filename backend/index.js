@@ -5,6 +5,7 @@ import itemRoutes from "./routes/itemsRoute.js";
 import logsRoute from "./routes/logsRoute.js";
 import notesRoute from "./routes/notesRoute.js";
 import reminderRoutes from "./routes/reminderRoutes.js";
+import statsRoute from "./routes/statsRoute.js";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -30,12 +31,14 @@ console.log(" - /items");
 console.log(" - /logs"); 
 console.log(" - /notes");
 console.log(" - /reminders");
+console.log(" - /stats");
 
 // Use routes
 app.use("/items", itemRoutes);
 app.use("/logs", logsRoute);
 app.use("/notes", notesRoute);
 app.use("/reminders", reminderRoutes);
+app.use("/stats", statsRoute);
 
 // Root route
 app.get("/", (request, response) => {
@@ -57,6 +60,41 @@ app.get('/api/resource', (req, res) => {
 app.use('/api/*', (req, res) => {
   console.log(`Route not found: ${req.originalUrl}`);
   res.status(404).json({ message: `API endpoint not found: ${req.originalUrl}` });
+});
+
+// Log all registered routes for debugging
+app.get('/routes', (req, res) => {
+  const routes = [];
+  
+  // Get all registered routes
+  app._router.stack.forEach(middleware => {
+    if (middleware.route) {
+      // Routes registered directly
+      routes.push({
+        path: middleware.route.path,
+        methods: Object.keys(middleware.route.methods).join(', ')
+      });
+    } else if (middleware.name === 'router') {
+      // Routes added via router
+      middleware.handle.stack.forEach(handler => {
+        if (handler.route) {
+          const path = handler.route.path;
+          const baseRoute = middleware.regexp.toString()
+            .replace('\\^', '')
+            .replace('\\/?(?=\\/|$)', '')
+            .replace(/\\\//g, '/');
+          
+          const fullPath = baseRoute.replace(/\(\?:\(\[\^\\\/]\+\?\)\)/g, '') + path;
+          routes.push({
+            path: fullPath,
+            methods: Object.keys(handler.route.methods).join(', ')
+          });
+        }
+      });
+    }
+  });
+  
+  res.json(routes);
 });
 
 // Connect to MongoDB and start the server
