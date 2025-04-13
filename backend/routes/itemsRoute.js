@@ -37,6 +37,7 @@ router.post("/", apiLimiter, async (request, response) => {
         const newItem = {
             title: request.body.title,
             description: request.body.description || '',
+            item_user: request.body.item_user || '', // Add item_user field
             category: request.body.category,
             status: request.body.status,
             department: request.body.department,
@@ -159,6 +160,7 @@ router.put("/:customId", apiLimiter, async (request, response) => {
         const updateData = {
             title: request.body.title,
             description: request.body.description,
+            item_user: request.body.item_user, // Add item_user field
             category: request.body.category,
             status: request.body.status,
             department: request.body.department,

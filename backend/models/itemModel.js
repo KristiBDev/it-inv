@@ -14,6 +14,10 @@ const itemSchema = mongoose.Schema(
             type: String,
             default: '',
         },
+        item_user: {
+            type: String,
+            default: '',
+        },
         dateAdded: {
             type: Date,
             default: Date.now,

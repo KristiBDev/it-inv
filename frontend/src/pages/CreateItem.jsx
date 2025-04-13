@@ -9,6 +9,7 @@ const CreateItem = () => {
   const [itemData, setItemData] = useState({
     title: '',
     description: '',
+    item_user: '', // Changed from user to item_user
     category: 'Laptop',
     status: 'Available',
     department: 'IT',
@@ -179,6 +180,19 @@ const CreateItem = () => {
                   <option value="Marketing">Marketing</option>
                   <option value="Operations">Operations</option>
                 </select>
+              </div>
+
+              {/* Add User field before description */}
+              <div className="col-span-1 md:col-span-2">
+                <label className="block text-sm font-medium mb-1">User (Name or Email)</label>
+                <input
+                  type="text"
+                  name="item_user"
+                  value={itemData.item_user}
+                  onChange={handleChange}
+                  className="app-input"
+                  placeholder="Enter user name or email"
+                />
               </div>
 
               <div className="col-span-1 md:col-span-2">

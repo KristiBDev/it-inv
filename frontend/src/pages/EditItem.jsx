@@ -16,6 +16,7 @@ const EditItem = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    item_user: '', // Initialize item_user field
     category: '',
     status: '',
     department: '',
@@ -49,6 +50,7 @@ const EditItem = () => {
         setFormData({
           title: itemData.title || '',
           description: itemData.description || '',
+          item_user: itemData.item_user || '', // Add item_user to formData
           category: itemData.category || '',
           status: itemData.status || '',
           department: itemData.department || '',
@@ -369,6 +371,18 @@ const EditItem = () => {
                         ))}
                       </div>
                     </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-secondary mb-1">User (Name or Email)</label>
+                    <input
+                      type="text"
+                      name="item_user"
+                      value={formData.item_user || ''}
+                      onChange={handleChange}
+                      className="app-input"
+                      placeholder="Enter user name or email"
+                    />
                   </div>
 
                   <div className="mt-4">

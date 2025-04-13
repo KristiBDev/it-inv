@@ -68,6 +68,11 @@ export const updateItemLog = async (item, oldItem, user = "DemoAdmin") => {
                 from: oldItem.notes || 'Not set', 
                 to: item.notes || 'Not set' 
             };
+        if (oldItem.item_user !== item.item_user) 
+            changes.item_user = { 
+                from: oldItem.item_user || 'Not set', 
+                to: item.item_user || 'Not set' 
+            };
         
         // Create change description for the most important fields
         const primaryChanges = Object.entries(changes)

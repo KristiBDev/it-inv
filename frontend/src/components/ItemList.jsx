@@ -174,12 +174,12 @@ const ItemList = ({ refreshTrigger }) => {
           <table className="app-table app-table-striped min-w-full divide-y">
             <thead>
               <tr>
-                <th className="column-header p-4 text-left rounded-tl-lg">Name</th>
+                <th className="column-header p-4 text-left rounded-tl-lg">ID</th>
+                <th className="column-header p-4 text-left">Name</th>
                 <th className="column-header p-4 text-left hidden md:table-cell">Category</th>
                 <th className="column-header p-4 text-left hidden md:table-cell">Status</th>
                 <th className="column-header p-4 text-left hidden md:table-cell">Date Added</th>
                 <th className="column-header p-4 text-left hidden md:table-cell">Department</th>
-                <th className="column-header p-4 text-left hidden md:table-cell">ID</th>
                 <th className="column-header p-4 text-center actions-header rounded-tr-lg">Actions</th>
               </tr>
             </thead>
@@ -187,6 +187,7 @@ const ItemList = ({ refreshTrigger }) => {
               {filteredItems.length > 0 ? (
                 filteredItems.map((item, index) => (
                   <tr key={index}>
+                    <td className="p-4">{item?.customId || 'N/A'}</td>
                     <td className="p-4">{item?.title || 'N/A'}</td>
                     <td className="p-4 hidden md:table-cell">{item?.category || 'N/A'}</td>
                     <td className="p-4 hidden md:table-cell">
@@ -205,7 +206,6 @@ const ItemList = ({ refreshTrigger }) => {
                       {item?.dateAdded ? new Date(item.dateAdded).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="p-4 hidden md:table-cell">{item?.department || 'N/A'}</td>
-                    <td className="p-4 hidden md:table-cell">{item?.customId || 'N/A'}</td>
                     <td className="p-4 flex gap-2 justify-center actions-cell">
                       <button
                         onClick={() => openItemDetails(item?.customId)}
