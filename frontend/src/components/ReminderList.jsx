@@ -4,11 +4,10 @@ import { FaCheckCircle, FaExclamationTriangle, FaClock, FaTrash, FaEye, FaLink, 
 import { Link } from 'react-router-dom';
 import Spinner from './Spinner';
 
-// Static object to hold reminder stats - with thisMonth added
-export const reminderStats = {
-  overdue: 0,
-  upcoming: 0,
-  thisMonth: 0
+// Export stats object without initial values
+export const homePageStats = {
+  overdue: undefined,
+  thisMonth: undefined
 };
 
 const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNightMode }) => {
@@ -51,10 +50,11 @@ const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNi
 
     setGroupedReminders(grouped);
     
-    // Update the static stats directly from grouped reminders
-    reminderStats.overdue = grouped.overdue.length;
-    reminderStats.thisMonth = grouped.thisMonth.length;
-    reminderStats.upcoming = grouped.today.length + grouped.thisMonth.length + grouped.upcoming.length;
+    // Update the homePageStats directly from grouped reminders
+    homePageStats.overdue = grouped.overdue.length;
+    homePageStats.thisMonth = grouped.thisMonth.length;
+    
+    console.log("Updated homePageStats in ReminderList:", homePageStats);
     
   }, [reminders]);
 

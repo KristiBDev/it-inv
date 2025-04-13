@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import ItemList from '../components/ItemList';
 import LogEntry from '../components/LogEntry';
-import { reminderStats } from '../components/ReminderList';
+import { homePageStats } from '../components/ReminderList';
 
 const Home = () => {
   const [items, setItems] = useState([]);
@@ -12,8 +12,6 @@ const Home = () => {
   const [refresh, setRefresh] = useState(false);
   const [logs, setLogs] = useState([]);
   const [logsLoading, setLogsLoading] = useState(false);
-  const [reminders, setReminders] = useState([]);
-  const [remindersLoading, setRemindersLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,26 +52,6 @@ const Home = () => {
       });
   }, [refresh]);
 
-  useEffect(() => {
-    setRemindersLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL;
-    axios
-      .get(`${apiUrl}/reminders`)
-      .then((response) => {
-        const remindersData = response.data.data || [];
-        setReminders(remindersData);
-        setRemindersLoading(false);
-      })
-      .catch((error) => {
-        if (error.response?.status === 429) {
-          toast.error('Too many requests. Please try again later.');
-        } else {
-          console.error("Error fetching reminders:", error);
-        } 
-        setRemindersLoading(false);
-      });
-  }, [refresh]);
-
   return (
     <div className="p-6 min-h-screen">
       <div className="flex justify-between items-center mb-6">
@@ -102,10 +80,10 @@ const Home = () => {
           <h2 className="text-xl font-semibold">Reminders</h2>
           <div className="mt-2">
             <p className="text-lg">
-              <span className="font-bold text-red-300">{reminderStats.overdue}</span> Overdue
+              <span className="font-bold text-red-300">{homePageStats.overdue}</span> Overdue
             </p>
             <p className="text-lg">
-              <span className="font-bold text-yellow-300">{reminderStats.thisMonth}</span> Due this month
+              <span className="font-bold text-yellow-300">{homePageStats.thisMonth}</span> Due this month
             </p>
           </div>
         </div>
