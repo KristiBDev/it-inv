@@ -1,45 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { isPast, isToday } from 'date-fns';
-import { FaCheckCircle, FaExclamationTriangle, FaClock, FaTrash, FaEye, FaLink } from 'react-icons/fa';
+import { isPast, isToday, isThisMonth } from 'date-fns';
+import { FaCheckCircle, FaExclamationTriangle, FaClock, FaTrash, FaEye, FaLink, FaCalendarAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Spinner from './Spinner';
 
-// Static object to hold reminder stats
+// Static object to hold reminder stats - with thisMonth added
 export const reminderStats = {
   overdue: 0,
   upcoming: 0,
-  lastUpdated: null
-};
-
-// Update the static stats when reminders change
-export const updateReminderStats = (reminders) => {
-  if (!reminders || !reminders.length) {
-    reminderStats.overdue = 0;
-    reminderStats.upcoming = 0;
-    reminderStats.lastUpdated = new Date();
-    return;
-  }
-  
-  let overdue = 0;
-  let upcoming = 0;
-  
-  reminders.forEach(reminder => {
-    const dueDate = new Date(reminder.dueDate);
-    const now = new Date();
-    
-    if (reminder.status !== 'Completed') {
-      if (dueDate < now) {
-        overdue++;
-      } else {
-        upcoming++;
-      }
-    }
-  });
-  
-  console.log("Updating static reminder stats - Overdue:", overdue, "Upcoming:", upcoming);
-  reminderStats.overdue = overdue;
-  reminderStats.upcoming = upcoming;
-  reminderStats.lastUpdated = new Date();
+  thisMonth: 0
 };
 
 const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNightMode }) => {
@@ -47,6 +16,7 @@ const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNi
   const [groupedReminders, setGroupedReminders] = useState({
     overdue: [],
     today: [],
+    thisMonth: [],
     upcoming: [],
     completed: []
   });
@@ -57,6 +27,7 @@ const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNi
     const grouped = {
       overdue: [],
       today: [],
+      thisMonth: [],
       upcoming: [],
       completed: []
     };
@@ -70,6 +41,9 @@ const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNi
         grouped.overdue.push(reminder);
       } else if (isToday(dueDate)) {
         grouped.today.push(reminder);
+      } else if (isThisMonth(dueDate) && !isToday(dueDate)) {
+        // Add to "Due this month" category if it's due this month but not today
+        grouped.thisMonth.push(reminder);
       } else {
         grouped.upcoming.push(reminder);
       }
@@ -77,8 +51,11 @@ const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNi
 
     setGroupedReminders(grouped);
     
-    // Update stats when reminders are loaded in this component
-    updateReminderStats(reminders);
+    // Update the static stats directly from grouped reminders
+    reminderStats.overdue = grouped.overdue.length;
+    reminderStats.thisMonth = grouped.thisMonth.length;
+    reminderStats.upcoming = grouped.today.length + grouped.thisMonth.length + grouped.upcoming.length;
+    
   }, [reminders]);
 
   // Get status icon for a reminder
@@ -230,6 +207,12 @@ const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNi
         title="Due Today" 
         reminders={groupedReminders.today}
         icon={<FaClock className="text-yellow-500" />}
+        relatedItems={[]}
+      />
+      <ReminderGroup 
+        title="Due this Month" 
+        reminders={groupedReminders.thisMonth}
+        icon={<FaCalendarAlt className="text-blue-400" />}
         relatedItems={[]}
       />
       <ReminderGroup 

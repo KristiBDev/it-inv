@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import ItemList from '../components/ItemList';
 import LogEntry from '../components/LogEntry';
-import { reminderStats, updateReminderStats } from '../components/ReminderList';
+import { reminderStats } from '../components/ReminderList';
 
 const Home = () => {
   const [items, setItems] = useState([]);
@@ -13,6 +14,7 @@ const Home = () => {
   const [logsLoading, setLogsLoading] = useState(false);
   const [reminders, setReminders] = useState([]);
   const [remindersLoading, setRemindersLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLoading(true);
@@ -58,13 +60,8 @@ const Home = () => {
     axios
       .get(`${apiUrl}/reminders`)
       .then((response) => {
-        console.log("Reminders API response:", response.data);
         const remindersData = response.data.data || [];
         setReminders(remindersData);
-        
-        // Update the static stats variable but DON'T trigger a refresh here
-        updateReminderStats(remindersData);
-        
         setRemindersLoading(false);
       })
       .catch((error) => {
@@ -84,22 +81,31 @@ const Home = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-lg rounded-lg p-6 transform transition-transform hover:scale-[1.02]">
+        <div 
+          className="bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-lg rounded-lg p-6 transform transition-transform hover:scale-[1.02] cursor-pointer"
+          onClick={() => navigate('/inventory')}
+        >
           <h2 className="text-xl font-semibold">Total Items</h2>
           <p className="text-4xl font-bold mt-2">{items?.length || 0}</p>
         </div>
-        <div className="bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg rounded-lg p-6 transform transition-transform hover:scale-[1.02]">
-          <h2 className="text-xl font-semibold">In Use</h2>
-          <p className="text-4xl font-bold mt-2">{items?.filter((item) => item.status === 'In Use').length || 0}</p>
+        <div 
+          className="bg-gradient-to-r from-yellow-500 to-yellow-700 text-white shadow-lg rounded-lg p-6 transform transition-transform hover:scale-[1.02] cursor-pointer"
+          onClick={() => navigate('/inventory')}
+        >
+          <h2 className="text-xl font-semibold">Maintenance</h2>
+          <p className="text-4xl font-bold mt-2">{items?.filter((item) => item.status === 'Maintenance').length || 0}</p>
         </div>
-        <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-lg rounded-lg p-6 transform transition-transform hover:scale-[1.02]">
+        <div 
+          className="bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-lg rounded-lg p-6 transform transition-transform hover:scale-[1.02] cursor-pointer"
+          onClick={() => navigate('/reminders')}
+        >
           <h2 className="text-xl font-semibold">Reminders</h2>
           <div className="mt-2">
             <p className="text-lg">
               <span className="font-bold text-red-300">{reminderStats.overdue}</span> Overdue
             </p>
             <p className="text-lg">
-              <span className="font-bold text-yellow-300">{reminderStats.upcoming}</span> Upcoming this month
+              <span className="font-bold text-yellow-300">{reminderStats.thisMonth}</span> Due this month
             </p>
           </div>
         </div>
