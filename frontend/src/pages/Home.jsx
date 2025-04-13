@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import ItemList from '../components/ItemList';
 import LogEntry from '../components/LogEntry';
+import { reminderStats, updateReminderStats } from '../components/ReminderList';
 
 const Home = () => {
   const [items, setItems] = useState([]);
@@ -10,6 +11,8 @@ const Home = () => {
   const [refresh, setRefresh] = useState(false);
   const [logs, setLogs] = useState([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [reminders, setReminders] = useState([]);
+  const [remindersLoading, setRemindersLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -49,6 +52,31 @@ const Home = () => {
       });
   }, [refresh]);
 
+  useEffect(() => {
+    setRemindersLoading(true);
+    const apiUrl = import.meta.env.VITE_API_URL;
+    axios
+      .get(`${apiUrl}/reminders`)
+      .then((response) => {
+        console.log("Reminders API response:", response.data);
+        const remindersData = response.data.data || [];
+        setReminders(remindersData);
+        
+        // Update the static stats variable but DON'T trigger a refresh here
+        updateReminderStats(remindersData);
+        
+        setRemindersLoading(false);
+      })
+      .catch((error) => {
+        if (error.response?.status === 429) {
+          toast.error('Too many requests. Please try again later.');
+        } else {
+          console.error("Error fetching reminders:", error);
+        } 
+        setRemindersLoading(false);
+      });
+  }, [refresh]);
+
   return (
     <div className="p-6 min-h-screen">
       <div className="flex justify-between items-center mb-6">
@@ -64,9 +92,16 @@ const Home = () => {
           <h2 className="text-xl font-semibold">In Use</h2>
           <p className="text-4xl font-bold mt-2">{items?.filter((item) => item.status === 'In Use').length || 0}</p>
         </div>
-        <div className="bg-gradient-to-r from-yellow-500 to-yellow-700 text-white shadow-lg rounded-lg p-6 transform transition-transform hover:scale-[1.02]">
-          <h2 className="text-xl font-semibold">Maintenance</h2>
-          <p className="text-4xl font-bold mt-2">{items?.filter((item) => item.status === 'Maintenance').length || 0}</p>
+        <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-lg rounded-lg p-6 transform transition-transform hover:scale-[1.02]">
+          <h2 className="text-xl font-semibold">Reminders</h2>
+          <div className="mt-2">
+            <p className="text-lg">
+              <span className="font-bold text-red-300">{reminderStats.overdue}</span> Overdue
+            </p>
+            <p className="text-lg">
+              <span className="font-bold text-yellow-300">{reminderStats.upcoming}</span> Upcoming this month
+            </p>
+          </div>
         </div>
       </div>
 

@@ -1,10 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { format, isPast, isToday } from 'date-fns';
-import { FaCheckCircle, FaExclamationTriangle, FaClock, FaEdit, FaTrash } from 'react-icons/fa';
+import { isPast, isToday } from 'date-fns';
+import { FaCheckCircle, FaExclamationTriangle, FaClock, FaTrash, FaEye, FaLink } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Spinner from './Spinner';
 
-const ReminderList = ({ reminders, isLoading, onComplete, onDelete }) => {
+// Static object to hold reminder stats
+export const reminderStats = {
+  overdue: 0,
+  upcoming: 0,
+  lastUpdated: null
+};
+
+// Update the static stats when reminders change
+export const updateReminderStats = (reminders) => {
+  if (!reminders || !reminders.length) {
+    reminderStats.overdue = 0;
+    reminderStats.upcoming = 0;
+    reminderStats.lastUpdated = new Date();
+    return;
+  }
+  
+  let overdue = 0;
+  let upcoming = 0;
+  
+  reminders.forEach(reminder => {
+    const dueDate = new Date(reminder.dueDate);
+    const now = new Date();
+    
+    if (reminder.status !== 'Completed') {
+      if (dueDate < now) {
+        overdue++;
+      } else {
+        upcoming++;
+      }
+    }
+  });
+  
+  console.log("Updating static reminder stats - Overdue:", overdue, "Upcoming:", upcoming);
+  reminderStats.overdue = overdue;
+  reminderStats.upcoming = upcoming;
+  reminderStats.lastUpdated = new Date();
+};
+
+const ReminderList = ({ reminders, isLoading, onComplete, onDelete, onView, isNightMode }) => {
   // Group reminders by status
   const [groupedReminders, setGroupedReminders] = useState({
     overdue: [],
@@ -38,36 +76,116 @@ const ReminderList = ({ reminders, isLoading, onComplete, onDelete }) => {
     });
 
     setGroupedReminders(grouped);
+    
+    // Update stats when reminders are loaded in this component
+    updateReminderStats(reminders);
   }, [reminders]);
 
-  // Priority badge component
-  const PriorityBadge = ({ priority }) => {
-    const classes = {
-      Low: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      Medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      High: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-    };
+  // Get status icon for a reminder
+  const getStatusIcon = (reminder) => {
+    const dueDate = new Date(reminder.dueDate);
+    const today = new Date();
     
-    return (
-      <span className={`text-xs px-2.5 py-0.5 rounded ${classes[priority] || classes.Medium}`}>
-        {priority}
-      </span>
-    );
-  };
-
-  // Status icon component
-  const StatusIcon = ({ status }) => {
-    switch (status) {
-      case 'Completed':
-        return <FaCheckCircle className="text-green-500" title="Completed" />;
-      case 'Overdue':
-        return <FaExclamationTriangle className="text-red-500" title="Overdue" />;
-      default:
-        return <FaClock className="text-blue-500" title="Pending" />;
+    if (reminder.status === 'Completed') {
+      return <FaCheckCircle className="text-green-500" size={14} title="Completed" />;
+    } else if (reminder.status === 'Overdue' || dueDate < today) {
+      return <FaExclamationTriangle className="text-red-500" size={14} title="Overdue" />;
+    } else {
+      return <FaClock className="text-blue-500" size={14} title="Upcoming" />;
     }
   };
 
-  const ReminderGroup = ({ title, reminders, icon }) => {
+  // Render a reminder card
+  const ReminderCard = ({ reminder, relatedItem }) => {
+    return (
+      <div 
+        className={`border rounded-lg shadow-sm p-3 ${
+          isNightMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200'
+        } h-36 flex flex-col`}
+      >
+        <div className="flex justify-between items-start mb-1">
+          <div className="flex items-center gap-2">
+            {getStatusIcon(reminder)}
+            <h3 className="font-medium truncate max-w-[150px]" title={reminder.title}>
+              {reminder.title}
+            </h3>
+            {reminder.itemId && (
+              <Link 
+                to={`/items/edit/${reminder.itemId}`} 
+                className="text-blue-500 hover:text-blue-700"
+                title={`Go to item: ${reminder.itemName || relatedItem?.title || reminder.itemId}`}
+              >
+                <FaLink size={14} />
+              </Link>
+            )}
+          </div>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${
+            new Date(reminder.dueDate) < new Date() 
+              ? 'bg-red-100 text-red-800' 
+              : 'bg-yellow-100 text-yellow-800'
+          } ${isNightMode ? 'bg-opacity-20' : ''}`}>
+            {new Date(reminder.dueDate) < new Date() ? 'Overdue' : 'Upcoming'}
+          </span>
+        </div>
+        
+        <div className="flex-grow overflow-hidden">
+          <p className="text-secondary text-xs mb-1 line-clamp-2 h-8" title={reminder.description}>
+            {reminder.description || 'No description provided'}
+          </p>
+          
+          {/* Display related item if available - moved higher up for better visibility */}
+          {reminder.itemId && (
+            <div className={`p-1 rounded text-xs ${isNightMode ? 'bg-gray-700' : 'bg-gray-100'} truncate`}>
+              <span className="font-medium mr-1">Item:</span>
+              <span title={reminder.itemName || relatedItem?.title || reminder.itemId} className="truncate">
+                {((reminder.itemName || relatedItem?.title || reminder.itemId).substring(0, 25))}
+                {(reminder.itemName || relatedItem?.title || reminder.itemId).length > 25 ? '...' : ''}
+              </span>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex justify-between items-center mt-1 pt-1 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-secondary">
+              Due: {new Date(reminder.dueDate).toLocaleDateString()}
+            </span>
+          </div>
+          <div className="flex gap-1">
+            {onView && (
+              <button
+                onClick={() => onView(reminder)}
+                className="text-blue-600 hover:text-blue-800 p-1"
+                title="View details"
+              >
+                <FaEye size={14} />
+              </button>
+            )}
+            {onComplete && reminder.status !== 'Completed' && (
+              <button
+                onClick={() => onComplete(reminder._id)}
+                className="text-green-600 hover:text-green-800 p-1"
+                title="Mark as completed"
+              >
+                <FaCheckCircle size={14} />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={() => onDelete(reminder._id)}
+                className="text-red-600 hover:text-red-800 p-1"
+                title="Delete reminder"
+              >
+                <FaTrash size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const ReminderGroup = ({ title, reminders, icon, relatedItems }) => {
     if (!reminders.length) return null;
     
     return (
@@ -75,58 +193,13 @@ const ReminderList = ({ reminders, isLoading, onComplete, onDelete }) => {
         <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
           {icon} {title} <span className="text-sm text-gray-500">({reminders.length})</span>
         </h3>
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {reminders.map(reminder => (
-            <div 
-              key={reminder._id} 
-              className="p-4 border rounded-lg shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700"
-            >
-              <div className="flex justify-between">
-                <div className="flex items-start gap-2">
-                  <StatusIcon status={reminder.status} />
-                  <div>
-                    <h4 className="font-medium">{reminder.title}</h4>
-                    {reminder.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                        {reminder.description}
-                      </p>
-                    )}
-                    <div className="mt-2 flex flex-wrap gap-2 items-center">
-                      <PriorityBadge priority={reminder.priority} />
-                      <span className="text-xs text-gray-500">
-                        Due: {format(new Date(reminder.dueDate), 'MMM d, yyyy')}
-                      </span>
-                      {reminder.itemId && (
-                        <Link 
-                          to={`/inventory/${reminder.itemId}`} 
-                          className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          {reminder.itemName}
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  {reminder.status !== 'Completed' && (
-                    <button
-                      onClick={() => onComplete(reminder._id)}
-                      className="text-green-600 hover:text-green-800 p-1"
-                      title="Mark as completed"
-                    >
-                      <FaCheckCircle />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => onDelete(reminder._id)}
-                    className="text-red-600 hover:text-red-800 p-1"
-                    title="Delete reminder"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ReminderCard 
+              key={reminder._id || reminder.id} 
+              reminder={reminder}
+              relatedItem={relatedItems ? relatedItems.find(item => item.customId === reminder.itemId) : null}
+            />
           ))}
         </div>
       </div>
@@ -150,22 +223,26 @@ const ReminderList = ({ reminders, isLoading, onComplete, onDelete }) => {
       <ReminderGroup 
         title="Overdue" 
         reminders={groupedReminders.overdue}
-        icon={<FaExclamationTriangle className="text-red-500" />} 
+        icon={<FaExclamationTriangle className="text-red-500" />}
+        relatedItems={[]}
       />
       <ReminderGroup 
         title="Due Today" 
         reminders={groupedReminders.today}
-        icon={<FaClock className="text-yellow-500" />} 
+        icon={<FaClock className="text-yellow-500" />}
+        relatedItems={[]}
       />
       <ReminderGroup 
         title="Upcoming" 
         reminders={groupedReminders.upcoming}
-        icon={<FaClock className="text-blue-500" />} 
+        icon={<FaClock className="text-blue-500" />}
+        relatedItems={[]}
       />
       <ReminderGroup 
         title="Completed" 
         reminders={groupedReminders.completed}
-        icon={<FaCheckCircle className="text-green-500" />} 
+        icon={<FaCheckCircle className="text-green-500" />}
+        relatedItems={[]}
       />
     </div>
   );

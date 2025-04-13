@@ -6,6 +6,7 @@ import Spinner from '../components/Spinner';
 import ItemNotes from '../components/ItemNotes';
 import ItemHistory from '../components/ItemHistory';
 import ItemTag from '../components/ItemTag';
+import ReminderList from '../components/ReminderList';
 import { toast } from 'react-toastify';
 import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../contexts/ThemeContext';
@@ -523,39 +524,7 @@ const EditItem = () => {
                   <p className="text-secondary">Create reminders for maintenance tasks, warranty expirations, or other important dates.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {reminders.map((reminder, index) => (
-                    <div 
-                      key={reminder._id || reminder.id || index} 
-                      className={`border rounded-lg shadow-sm p-4 ${
-                        isNightMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <h3 className="font-medium">{reminder.title}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          new Date(reminder.dueDate) < new Date() 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        } ${isNightMode ? 'bg-opacity-20' : ''}`}>
-                          {new Date(reminder.dueDate) < new Date() ? 'Overdue' : 'Upcoming'}
-                        </span>
-                      </div>
-                      <p className="text-secondary text-sm mb-3">{reminder.description}</p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-secondary">
-                          Due: {new Date(reminder.dueDate).toLocaleDateString()}
-                        </span>
-                        <a 
-                          href={`/reminders`}
-                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                        >
-                          View Details
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <ReminderList reminders={reminders} isNightMode={isNightMode} item={item} />
               )}
             </div>
           </div>

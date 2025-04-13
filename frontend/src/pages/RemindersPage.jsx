@@ -7,6 +7,18 @@ import { toast } from 'react-toastify';
 import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../contexts/ThemeContext';
 import { deleteReminder } from '../services/remindersService';
+import { FaEye, FaExclamationTriangle, FaClock, FaCheckCircle, FaTrash, FaLink } from 'react-icons/fa';
+import ReminderList from '../components/ReminderList';
+
+const MAX_TITLE_LENGTH = 50;
+const MAX_DESCRIPTION_LENGTH = 250;
+
+// Helper function to sanitize input
+const sanitizeInput = (input) => {
+  if (!input) return '';
+  // Remove HTML tags and trim
+  return input.replace(/<[^>]*>?/gm, '').trim();
+};
 
 const RemindersPage = () => {
   const [reminders, setReminders] = useState([]);
@@ -26,6 +38,8 @@ const RemindersPage = () => {
   const navigate = useNavigate();
   const { isNightMode } = useTheme();
   const location = useLocation(); // Get location for URL query params
+  const [selectedReminder, setSelectedReminder] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Check for itemId in URL params when component mounts
   useEffect(() => {
@@ -183,10 +197,34 @@ const RemindersPage = () => {
     setSearchText('');
     setShowDropdown(false);
   };
+
+  // Open detail modal
+  const openDetailModal = (reminder) => {
+    setSelectedReminder(reminder);
+    setShowDetailModal(true);
+  };
+
+  // Close detail modal
+  const closeDetailModal = () => {
+    setSelectedReminder(null);
+    setShowDetailModal(false);
+  };
   
   // Handle input change for new reminder
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Apply length restrictions based on field name
+    if (name === 'title' && value.length > MAX_TITLE_LENGTH) {
+      toast.info(`Title cannot exceed ${MAX_TITLE_LENGTH} characters`);
+      return;
+    }
+    
+    if (name === 'description' && value.length > MAX_DESCRIPTION_LENGTH) {
+      toast.info(`Description cannot exceed ${MAX_DESCRIPTION_LENGTH} characters`);
+      return;
+    }
+    
     setNewReminder(prev => ({
       ...prev,
       [name]: value
@@ -217,8 +255,17 @@ const RemindersPage = () => {
   const handleSubmitReminder = async (e) => {
     e.preventDefault();
     
-    if (!newReminder.title || !newReminder.dueDate) {
-      toast.error('Title and due date are required');
+    // Sanitize and validate inputs
+    const sanitizedTitle = sanitizeInput(newReminder.title).substring(0, MAX_TITLE_LENGTH);
+    const sanitizedDescription = sanitizeInput(newReminder.description).substring(0, MAX_DESCRIPTION_LENGTH);
+    
+    if (!sanitizedTitle) {
+      toast.error('Title is required');
+      return;
+    }
+    
+    if (!newReminder.dueDate) {
+      toast.error('Due date is required');
       return;
     }
     
@@ -229,6 +276,8 @@ const RemindersPage = () => {
       // Format the submission data to match the model
       const reminderData = {
         ...newReminder,
+        title: sanitizedTitle,
+        description: sanitizedDescription,
         // If we have searchText but no itemId, try to find the item by customId
         itemId: newReminder.itemId || 
                 (searchText ? items.find(i => i.customId === searchText)?.customId || searchText : ''),
@@ -315,73 +364,13 @@ const RemindersPage = () => {
                 <p className="text-secondary">Create reminders for maintenance tasks, warranty expirations, or other important dates.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {reminders.map((reminder, index) => {
-                  const relatedItem = getItemByCustomId(reminder.itemId);
-                  
-                  return (
-                    <div 
-                      key={reminder._id || reminder.id || index} 
-                      className={`border rounded-lg shadow-sm p-4 ${
-                        isNightMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <h3 className="font-medium">{reminder.title}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          new Date(reminder.dueDate) < new Date() 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        } ${isNightMode ? 'bg-opacity-20' : ''}`}>
-                          {new Date(reminder.dueDate) < new Date() ? 'Overdue' : 'Upcoming'}
-                        </span>
-                      </div>
-                      <p className="text-secondary text-sm mb-3">{reminder.description}</p>
-                      
-                      {/* Display related item if available */}
-                      {reminder.itemId && (
-                        <div className={`mt-2 mb-3 p-2 rounded ${isNightMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                          <div className="flex items-center">
-                            <span className="text-xs font-medium mr-2">Related Item:</span>
-                            <a 
-                              href={`/items/edit/${reminder.itemId}`}
-                              className="text-xs text-blue-500 hover:text-blue-700 hover:underline"
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                            >
-                              {reminder.itemId}
-                              <span className="ml-1 inline-block">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                  <polyline points="15 3 21 3 21 9"></polyline>
-                                  <line x1="10" y1="14" x2="21" y2="3"></line>
-                                </svg>
-                              </span>
-                            </a>
-                          </div>
-                          {relatedItem && (
-                            <div className="text-xs text-secondary mt-1 truncate">
-                              {relatedItem.title}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-secondary">
-                          Due: {new Date(reminder.dueDate).toLocaleDateString()}
-                        </span>
-                        <button 
-                          onClick={() => handleDeleteReminder(reminder._id)}
-                          className="text-sm text-red-600 hover:text-red-800"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <ReminderList 
+                reminders={reminders}
+                isLoading={false}
+                onDelete={handleDeleteReminder}
+                onView={openDetailModal}
+                isNightMode={isNightMode}
+              />
             )}
           </div>
         )}
@@ -484,6 +473,89 @@ const RemindersPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reminder Detail Modal */}
+      {showDetailModal && selectedReminder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className={`relative w-full max-w-lg p-6 rounded-lg shadow-xl ${isNightMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <button 
+              onClick={closeDetailModal}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className="flex items-center gap-2 mb-2">
+              {selectedReminder.status === 'Completed' ? (
+                <FaCheckCircle className="text-green-500" />
+              ) : new Date(selectedReminder.dueDate) < new Date() ? (
+                <FaExclamationTriangle className="text-red-500" />
+              ) : (
+                <FaClock className="text-blue-500" />
+              )}
+              <h3 className="text-xl font-semibold">{selectedReminder.title}</h3>
+            </div>
+            
+            <div className="space-y-4 mt-4">
+              <div>
+                <h4 className="text-sm font-medium text-secondary mb-1">Status</h4>
+                <span className={`inline-block px-3 py-1 rounded-full text-sm ${
+                  new Date(selectedReminder.dueDate) < new Date() 
+                    ? 'bg-red-100 text-red-800' 
+                    : selectedReminder.status === 'Completed'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                } ${isNightMode ? 'bg-opacity-20' : ''}`}>
+                  {new Date(selectedReminder.dueDate) < new Date() ? 'Overdue' : 
+                   selectedReminder.status === 'Completed' ? 'Completed' : 'Upcoming'}
+                </span>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium text-secondary mb-1">Due Date</h4>
+                <p>{new Date(selectedReminder.dueDate).toLocaleDateString()}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium text-secondary mb-1">Description</h4>
+                <p className="whitespace-pre-line">{selectedReminder.description || 'No description provided'}</p>
+              </div>
+              
+              {selectedReminder.itemId && (
+                <div>
+                  <h4 className="text-sm font-medium text-secondary mb-1">Related Item</h4>
+                  <div className={`p-3 rounded ${isNightMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                    <p className="font-medium">{getItemByCustomId(selectedReminder.itemId)?.title || 'Unknown Item'}</p>
+                    <p className="text-sm text-secondary mt-1">ID: {selectedReminder.itemId}</p>
+                    <div className="mt-2">
+                      <a 
+                        href={`/items/edit/${selectedReminder.itemId}`}
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        View Item Details
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="pt-4 flex justify-end">
+                <button 
+                  onClick={() => {
+                    handleDeleteReminder(selectedReminder._id);
+                    closeDetailModal();
+                  }}
+                  className="app-btn app-btn-danger"
+                >
+                  Delete Reminder
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
