@@ -1,12 +1,11 @@
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 /*
 * IT Inventory System Theme
 * A comprehensive theme with consistent color schemes and component styling
 */
-
-/* Import Google Font */
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700;800&display=swap');
 
 /* Theme Variables */
 :root {

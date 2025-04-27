@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { AiOutlineEye, AiOutlineEdit, AiOutlineDownload } from 'react-icons/ai';
+import { AiOutlineEye, AiOutlineDownload, AiOutlineFolder } from 'react-icons/ai';
 import { MdOutlineDelete } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import ItemDetailsModal from './ItemDetailsModal';
+import DeleteItemModal from './DeleteItemModal';
 
 const ItemList = ({ refreshTrigger }) => {
   const [items, setItems] = useState([]);
@@ -15,6 +16,37 @@ const ItemList = ({ refreshTrigger }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
+  
+  // New state for delete modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  // Function to open delete modal
+  const openDeleteModal = (item) => {
+    setItemToDelete(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Function to close delete modal
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
+  };
+
+  // Function to handle successful deletion
+  const handleDeleteSuccess = () => {
+    // Refresh the items list by triggering a re-render
+    const apiUrl = import.meta.env.VITE_API_URL;
+    axios
+      .get(`${apiUrl}/items`)
+      .then((response) => {
+        setItems(response.data.data || []);
+        setFilteredItems(response.data.data || []);
+      })
+      .catch((error) => {
+        console.error("Error fetching items:", error);
+      });
+  };
 
   const openItemDetails = (itemId) => {
     setSelectedItemId(itemId);
@@ -102,6 +134,7 @@ const ItemList = ({ refreshTrigger }) => {
 
     const csvContent = [headers, ...rows]
       .map(row => row.map(value => `"${value}"`).join(","))
+
       .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -217,17 +250,17 @@ const ItemList = ({ refreshTrigger }) => {
                       <Link
                         to={`/items/edit/${item?.customId}`}
                         className="action-button action-button-edit"
-                        title="Edit Item"
+                        title="View Full Details"
                       >
-                        <AiOutlineEdit size={18} />
+                        <AiOutlineFolder size={18} />
                       </Link>
-                      <Link
-                        to={`/items/delete/${item?.customId}`}
+                      <button
+                        onClick={() => openDeleteModal(item)}
                         className="action-button action-button-delete"
                         title="Delete Item"
                       >
                         <MdOutlineDelete size={18} />
-                      </Link>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -248,6 +281,17 @@ const ItemList = ({ refreshTrigger }) => {
         onClose={closeItemDetails} 
         itemId={selectedItemId}
       />
+
+      {/* Add the DeleteItemModal */}
+      {itemToDelete && (
+        <DeleteItemModal
+          isOpen={isDeleteModalOpen}
+          onClose={closeDeleteModal}
+          itemId={itemToDelete.customId}
+          itemTitle={itemToDelete.title}
+          onDeleteSuccess={handleDeleteSuccess}
+        />
+      )}
     </div>
   );
 };

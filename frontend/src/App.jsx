@@ -7,7 +7,6 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import CreateItem from './pages/CreateItem';
 import EditItem from './pages/EditItem';
-import DeleteItem from './pages/DeleteItem';
 import InventoryList from './pages/InventoryList';
 import Activity from './pages/Activity';
 import RemindersPage from './pages/RemindersPage';
@@ -23,7 +22,6 @@ function App() {
             <Route index element={<Home />} />
             <Route path="/items/create" element={<CreateItem />} />
             <Route path="/items/edit/:id" element={<EditItem />} />
-            <Route path="/items/delete/:id" element={<DeleteItem />} />
             <Route path="/inventory" element={<InventoryList />} />
             <Route path="/reminders" element={<RemindersPage />} />
             <Route path="/logs" element={<div className="p-6">Logs / Activity Page (Coming Soon)</div>} />

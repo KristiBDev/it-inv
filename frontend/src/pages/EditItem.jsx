@@ -215,7 +215,7 @@ const EditItem = () => {
       <div className="flex justify-between items-center">
         <BackButton />
       </div>
-      <h1 className="text-3xl font-bold my-6">Edit Item</h1>
+      <h1 className="text-3xl font-bold my-6">Item Details</h1>
       
       <div className="app-card shadow-xl rounded-xl overflow-hidden">
         {loading ? (
