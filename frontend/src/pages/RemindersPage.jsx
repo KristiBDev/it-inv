@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
-import BackButton from '../components/BackButton';
 import Spinner from '../components/Spinner';
 import { toast } from 'react-toastify';
 import ThemeToggle from '../components/ThemeToggle';
@@ -336,8 +335,7 @@ const RemindersPage = () => {
   return (
     <div className="p-4 min-h-screen">
       <div className="flex justify-between items-center">
-        <BackButton />
-        <ThemeToggle />
+        
       </div>
       <h1 className="text-3xl font-bold my-6">Reminders</h1>
 

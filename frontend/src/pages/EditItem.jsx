@@ -8,7 +8,6 @@ import ItemHistory from '../components/ItemHistory';
 import ItemTag from '../components/ItemTag';
 import ReminderList from '../components/ReminderList';
 import { toast } from 'react-toastify';
-import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../contexts/ThemeContext';
 import { getItemReminders } from '../services/remindersService';
 
@@ -215,7 +214,6 @@ const EditItem = () => {
     <div className="p-4 min-h-screen">
       <div className="flex justify-between items-center">
         <BackButton />
-        <ThemeToggle />
       </div>
       <h1 className="text-3xl font-bold my-6">Edit Item</h1>
       

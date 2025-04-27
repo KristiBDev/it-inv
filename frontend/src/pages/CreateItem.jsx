@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import ThemeToggle from '../components/ThemeToggle';
 
 const CreateItem = () => {
   const navigate = useNavigate();
@@ -79,9 +78,8 @@ const CreateItem = () => {
   return (
     <div className="p-6 min-h-screen flex justify-center">
       <div className="w-full max-w-4xl">
-        <div className="flex justify-between items-center mb-6">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-wide">Add New Item</h1>
-          <ThemeToggle />
         </div>
         
         <div className="app-card p-6 shadow-lg">

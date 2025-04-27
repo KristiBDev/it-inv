@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import Spinner from '../components/Spinner';
 import { useTheme } from '../contexts/ThemeContext';
-import BackButton from '../components/BackButton';
+
 import LogEntry from '../components/LogEntry';
 
 const Activity = () => {
@@ -160,7 +160,7 @@ const Activity = () => {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">Activity Log</h1>
-        <BackButton />
+        
       </div>
 
       {/* Search and Filter Bar */}
